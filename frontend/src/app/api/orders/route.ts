@@ -23,8 +23,8 @@ export async function POST(req: NextRequest) {
       const { Resend } = await import('resend')
       const resend = new Resend(process.env.RESEND_API_KEY)
       await resend.emails.send({
-        from: process.env.RESEND_FROM || 'narudzbine@petcode.rs',
-        to: process.env.ADMIN_EMAIL || 'admin@petcode.rs',
+        from: process.env.RESEND_FROM || 'narudzbine@pet-code.rs',
+        to: process.env.ADMIN_EMAIL || 'admin@pet-code.rs',
         subject: `🐾 Nova narudžbina — ${customer_name} (${quantity}x privezak)`,
         html: `
           <div style="font-family:sans-serif;max-width:500px;margin:0 auto;">

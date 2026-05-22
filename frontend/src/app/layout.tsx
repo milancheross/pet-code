@@ -8,7 +8,7 @@ const manrope = Manrope({ subsets: ['latin'], weight: ['400','500','600','700','
 export const metadata: Metadata = {
   title: 'PetCode.rs — QR identifikacija ljubimaca',
   description: 'Skeniranjem QR koda na privetku dobijate sve podatke o ljubimcu i kontakt vlasnika.',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://petcode.rs'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://pet-code.rs'),
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

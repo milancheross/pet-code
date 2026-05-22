@@ -92,7 +92,7 @@ export default function HomePage() {
                       </div>
                     ))}
                   </div>
-                  <div className="p-3 text-center text-[9px] text-gray-300 font-medium tracking-widest uppercase">petcode.rs</div>
+                  <div className="p-3 text-center text-[9px] text-gray-300 font-medium tracking-widest uppercase">pet-code.rs</div>
                 </div>
               </div>
               {/* Floating badges */}
@@ -233,7 +233,7 @@ export default function HomePage() {
                       <path d="M16 16h3M21 16h3M16 20h3M16 23h6M22 20v6" stroke="#19B6B2" strokeWidth="1.4" strokeLinecap="round"/>
                     </svg>
                   </div>
-                  <span className="text-white/25 text-[9px] font-medium tracking-widest uppercase">petcode.rs</span>
+                  <span className="text-white/25 text-[9px] font-medium tracking-widest uppercase">pet-code.rs</span>
                 </div>
               </div>
             </div>
@@ -340,10 +340,10 @@ export default function HomePage() {
       <footer className="border-t border-[#E2EAF0] py-10 px-4 bg-white">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-5">
           <PetCodeLogo size="sm" showTagline />
-          <div className="text-xs text-gray-400 font-medium">© 2025 PetCode · Srbija · info@petcode.rs</div>
+          <div className="text-xs text-gray-400 font-medium">© 2025 PetCode · Srbija · info@pet-code.rs</div>
           <div className="flex items-center gap-5">
             <Link href="/login" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">{t('nav_login')}</Link>
-            <a href="mailto:info@petcode.rs" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">Kontakt</a>
+            <a href="mailto:info@pet-code.rs" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">Kontakt</a>
           </div>
         </div>
       </footer>
