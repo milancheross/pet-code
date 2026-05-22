@@ -9,7 +9,7 @@ export async function middleware(request: NextRequest) {
     {
       cookies: {
         getAll() { return request.cookies.getAll() },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: { name: string; value: string; options: any }[]) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options))
@@ -21,12 +21,10 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   const path = request.nextUrl.pathname
 
-  // Zaštiti /dashboard — redirect na /login ako nije prijavljen
   if (path.startsWith('/dashboard') && !user) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Ako je prijavljen i ide na /login, šalji na dashboard
   if (path === '/login' && user) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
