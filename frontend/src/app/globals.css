@@ -2,28 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=DM+Mono:wght@400;500&display=swap');
-
 @layer components {
+  .btn-primary {
+    @apply bg-orange text-white font-bold rounded-full px-6 py-3
+           hover:bg-orange2 active:scale-95 transition-all text-center
+           shadow-[0_4px_20px_rgba(255,107,74,0.40)] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
   .btn-teal {
     @apply bg-teal text-white font-bold rounded-full px-6 py-3
            hover:bg-teal2 active:scale-95 transition-all text-center
-           shadow-[0_4px_16px_rgba(61,191,184,0.35)] disabled:opacity-50 disabled:cursor-not-allowed;
+           shadow-[0_4px_16px_rgba(25,182,178,0.30)] disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .btn-navy {
     @apply bg-navy text-white font-bold rounded-full px-6 py-3
-           hover:bg-[#243d5e] active:scale-95 transition-all text-center;
+           hover:bg-[#162d52] active:scale-95 transition-all text-center;
   }
   .btn-outline {
-    @apply border-2 border-[#e2f0ef] text-navy font-bold rounded-full px-6 py-3
+    @apply border-2 border-[#D8E4EE] text-navy font-bold rounded-full px-6 py-3
            hover:border-teal hover:text-teal active:scale-95 transition-all text-center;
   }
-  .card { @apply bg-white rounded-3xl border border-[#e2f0ef] p-6; }
+  .card { @apply bg-white rounded-3xl border border-[#E2EAF0] p-6; }
   .input {
-    @apply w-full border-2 border-[#e2f0ef] rounded-2xl px-4 py-3
+    @apply w-full border-2 border-[#E2EAF0] rounded-2xl px-4 py-3
            text-navy font-semibold text-sm
            focus:border-teal focus:outline-none transition-colors bg-white;
   }
-  .label { @apply block text-xs font-black text-teal uppercase tracking-widest mb-1.5; }
-  .section-label { @apply text-xs font-black text-teal uppercase tracking-widest; }
+  .label { @apply block text-xs font-extrabold text-teal uppercase tracking-widest mb-1.5; }
+  .section-label { @apply text-xs font-extrabold text-teal uppercase tracking-widest; }
 }
