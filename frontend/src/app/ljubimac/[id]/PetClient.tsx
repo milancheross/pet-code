@@ -55,9 +55,9 @@ export default function PetClient({ pet: p, isNew }: { pet: PetFull; isNew: bool
 
   return (
     <>
-      <style>{`body{background:#e8f5f4!important;margin:0;padding:0}`}</style>
+      <style>{`body{background:#EEF2F7!important;margin:0;padding:0}`}</style>
       <div className="min-h-screen flex items-start justify-center py-8 px-4">
-        <div className="w-full max-w-sm bg-white rounded-[28px] overflow-hidden shadow-[0_24px_64px_rgba(26,45,74,0.18)]">
+        <div className="w-full max-w-sm bg-white rounded-[28px] overflow-hidden shadow-[0_24px_64px_rgba(11,31,59,0.16)]">
 
           {isNew && (
             <div className="bg-teal text-white text-center py-3 text-sm font-bold">
@@ -66,7 +66,7 @@ export default function PetClient({ pet: p, isNew }: { pet: PetFull; isNew: bool
           )}
 
           {/* Header */}
-          <div className="bg-navy pb-6 pt-5 px-5 text-center relative">
+          <div className="bg-[#0B1F3B] pb-6 pt-5 px-5 text-center relative">
             <div className="absolute top-4 right-4"><LangSwitcher dark /></div>
             <a href="/" className="font-mono text-[11px] text-white/25 tracking-widest uppercase mb-4 block">
               pet<span className="text-teal">code</span>.rs
@@ -87,13 +87,13 @@ export default function PetClient({ pet: p, isNew }: { pet: PetFull; isNew: bool
 
           {/* CTA dugmad - poziv i SMS */}
           {p.owners?.phone && (
-            <div className="bg-[#f0fffe] border-b border-[#e2f0ef] p-4 flex gap-3">
+            <div className="bg-[#F4F7FA] border-b border-[#E2EAF0] p-4 flex gap-3">
               <a href={`tel:${phone}`}
-                className="flex-1 bg-teal text-white font-black text-sm rounded-2xl py-3.5 text-center shadow-[0_4px_16px_rgba(61,191,184,0.35)] hover:bg-teal2 active:scale-95 transition-all">
+                className="flex-1 bg-teal text-white font-bold text-sm rounded-2xl py-3.5 text-center shadow-[0_4px_14px_rgba(25,182,178,0.3)] hover:bg-teal2 active:scale-95 transition-all">
                 {t('prof_call')}
               </a>
               <a href={`sms:${phone}`}
-                className="flex-1 bg-navy text-white font-black text-sm rounded-2xl py-3.5 text-center hover:bg-[#243d5e] active:scale-95 transition-all">
+                className="flex-1 bg-[#0B1F3B] text-white font-bold text-sm rounded-2xl py-3.5 text-center hover:bg-[#162d52] active:scale-95 transition-all">
                 {t('prof_sms')}
               </a>
             </div>
@@ -232,7 +232,7 @@ export default function PetClient({ pet: p, isNew }: { pet: PetFull; isNew: bool
           )}
 
           {/* Footer */}
-          <div className="border-t border-[#e2f0ef] bg-[#f8fffd] py-4 text-center mt-4">
+          <div className="border-t border-[#E2EAF0] bg-[#F8FAFB] py-4 text-center mt-4">
             <a href="/" className="text-xs text-gray-400 font-bold hover:text-teal">
               {t('prof_footer')} <span className="text-teal">petcode</span>.rs
             </a>

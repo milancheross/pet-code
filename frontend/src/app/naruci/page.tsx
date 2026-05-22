@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import { useLang } from '@/lib/i18n/LangContext'
 import LangSwitcher from '@/components/LangSwitcher'
 import Link from 'next/link'
+import PetCodeLogo from '@/components/PetCodeLogo'
 import { PRICE_PER_TAG } from '@/lib/types'
 
 export default function OrderPage() {
@@ -41,20 +42,22 @@ export default function OrderPage() {
   }
 
   if (success) return (
-    <div className="min-h-screen bg-[#f0fffe] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#F4F7FA] flex items-center justify-center p-4">
       <div className="card text-center max-w-sm w-full py-12">
-        <div className="text-5xl mb-4">🎉</div>
-        <h1 className="text-2xl font-black text-navy mb-3">{t('order_success_t')}</h1>
+        <div className="w-16 h-16 rounded-full bg-orange/10 flex items-center justify-center mx-auto mb-5">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M5 14l6 6L23 8" stroke="#FF6B4A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </div>
+        <h1 className="text-2xl font-extrabold text-navy mb-3">{t('order_success_t')}</h1>
         <p className="text-gray-500 font-medium mb-8">{t('order_success')}</p>
-        <Link href="/" className="btn-teal block">{t('not_found_back')}</Link>
+        <Link href="/" className="btn-primary block">{t('not_found_back')}</Link>
       </div>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-[#f0fffe] pb-16">
-      <nav className="bg-white border-b border-[#e2f0ef] px-4 py-3 flex items-center justify-between sticky top-0 z-10">
-        <Link href="/" className="font-black text-navy">pet<span className="text-teal">code</span>.rs</Link>
+    <div className="min-h-screen bg-[#F4F7FA] pb-16">
+      <nav className="bg-white border-b border-[#E2EAF0] px-5 py-3.5 flex items-center justify-between sticky top-0 z-10">
+        <PetCodeLogo size="sm" />
         <LangSwitcher />
       </nav>
 
@@ -93,7 +96,7 @@ export default function OrderPage() {
             <div><label className="label">{t('order_note')}</label><textarea className="input resize-none h-20" value={note} onChange={e=>setNote(e.target.value)} placeholder={t('order_note_ph')} /></div>
           </div>
 
-          <button onClick={handleSubmit} disabled={loading} className="btn-teal w-full text-base">
+          <button onClick={handleSubmit} disabled={loading} className="btn-primary w-full text-base">
             {loading ? t('order_sending') : t('order_submit')}
           </button>
 
