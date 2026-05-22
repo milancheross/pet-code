@@ -37,4 +37,4 @@ export interface PetFull extends Pet {
 export const SPECIES_EMOJI: Record<Species, string> = {
   pas: '🐕', macka: '🐈', zec: '🐇', ptica: '🦜', ostalo: '🐾',
 }
-export const PRICE_PER_TAG = 990
+export const PRICE_PER_TAG = 1500

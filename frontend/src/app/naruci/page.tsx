@@ -1,6 +1,5 @@
 'use client'
 import { useState } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { useLang } from '@/lib/i18n/LangContext'
 import LangSwitcher from '@/components/LangSwitcher'
 import Link from 'next/link'
@@ -9,22 +8,17 @@ import { PRICE_PER_TAG } from '@/lib/types'
 
 export default function OrderPage() {
   const { t } = useLang()
-  const params = useSearchParams()
-  const initQty = Number(params.get('qty')) || 1
-
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [address, setAddress] = useState('')
   const [city, setCity] = useState('')
-  const [qty, setQty] = useState(initQty)
   const [note, setNote] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
 
-  const discount = qty === 2 ? 290 : qty >= 4 ? 980 : 0
-  const total = PRICE_PER_TAG * qty - discount
+  const total = PRICE_PER_TAG
 
   const handleSubmit = async () => {
     if (!name || !phone || !address || !city) { setError(t('order_required')); return }
@@ -33,7 +27,7 @@ export default function OrderPage() {
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customer_name: name, customer_phone: phone, customer_email: email || null, address, city, quantity: qty, note: note || null, total_rsd: total }),
+        body: JSON.stringify({ customer_name: name, customer_phone: phone, customer_email: email || null, address, city, quantity: 1, note: note || null, total_rsd: total }),
       })
       if (!res.ok) throw new Error()
       setSuccess(true)
@@ -67,21 +61,15 @@ export default function OrderPage() {
         {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 mb-5 text-sm font-semibold">⚠️ {error}</div>}
 
         <div className="space-y-5">
-          {/* Količina */}
+          {/* Cena */}
           <div className="card">
-            <label className="label">{t('order_qty')}</label>
-            <div className="grid grid-cols-3 gap-2 mt-1">
-              {[1,2,4].map(q => (
-                <button key={q} onClick={() => setQty(q)}
-                  className={`py-3 rounded-2xl border-2 font-black text-sm transition-all ${qty === q ? 'border-teal bg-teal/10 text-teal' : 'border-[#e2f0ef] text-gray-500'}`}>
-                  {q}x
-                  {q > 1 && <div className="text-[10px] font-semibold text-teal mt-0.5">-{q===2?'290':'980'} RSD</div>}
-                </button>
-              ))}
+            <div className="flex justify-between items-center mb-3">
+              <span className="label mb-0">{t('order_qty')}</span>
+              <span className="text-xs text-gray-400 font-semibold">1x privezak</span>
             </div>
-            <div className="mt-4 bg-teal/8 rounded-2xl p-4 flex justify-between items-center">
-              <span className="text-sm font-bold text-gray-500">{t('order_total')}</span>
-              <span className="text-2xl font-black text-navy">{total.toLocaleString()} RSD</span>
+            <div className="bg-navy rounded-2xl p-5 flex justify-between items-center">
+              <span className="text-sm font-bold text-white/50">{t('order_total')}</span>
+              <span className="text-3xl font-extrabold text-white tracking-tight">{total.toLocaleString()} <span className="text-lg font-semibold">RSD</span></span>
             </div>
             <div className="text-center text-xs text-gray-400 font-semibold mt-2">💳 {t('order_cod')}</div>
           </div>

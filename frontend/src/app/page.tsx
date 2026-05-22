@@ -248,51 +248,33 @@ export default function HomePage() {
             <div className="section-label mb-3">// cena</div>
             <h2 className="text-3xl md:text-4xl font-extrabold text-navy tracking-tight">{t('price_title')}</h2>
           </div>
-          <div className="grid md:grid-cols-3 gap-5 max-w-3xl mx-auto">
-            {[
-              { label:'1 privezak', qty:1, featured: false },
-              { label:'2 privezka', qty:2, featured: true, save:'290' },
-              { label:'4 privezka', qty:4, featured: false, save:'980', badge: 'Best value' },
-            ].map(p => (
-              <div key={p.qty} className={`rounded-3xl p-7 border-2 relative ${p.featured ? 'bg-navy border-navy shadow-[0_20px_50px_rgba(11,31,59,0.22)] scale-[1.03]' : 'border-[#E2EAF0] bg-white hover:border-teal/40 transition-colors'}`}>
-                {p.featured && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-orange text-white text-[10px] font-bold px-4 py-1 rounded-full uppercase tracking-widest shadow-[0_4px_12px_rgba(255,107,74,0.4)]">
-                    Najpopularnije
-                  </div>
-                )}
-                {p.badge && !p.featured && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-teal text-white text-[10px] font-bold px-4 py-1 rounded-full uppercase tracking-widest">
-                    {p.badge}
-                  </div>
-                )}
-                <div className={`text-xs font-bold uppercase tracking-widest mb-3 ${p.featured ? 'text-white/40' : 'text-gray-400'}`}>{p.label}</div>
-                <div className={`text-3xl font-extrabold tracking-tight mb-1 ${p.featured ? 'text-white' : 'text-navy'}`}>
-                  {(PRICE_PER_TAG * p.qty - (p.qty === 2 ? 290 : p.qty === 4 ? 980 : 0)).toLocaleString()} <span className="text-lg font-semibold">RSD</span>
-                </div>
-                {p.save
-                  ? <div className="text-teal text-xs font-bold mb-5">Uštedi {p.save} RSD</div>
-                  : <div className="mb-5" />
-                }
-                <ul className={`space-y-2.5 mb-6 text-sm font-medium ${p.featured ? 'text-white/60' : 'text-gray-400'}`}>
-                  {['Doživotni profil','Besplatna dostava','Plaćanje pouzećem'].map(item => (
-                    <li key={item} className="flex gap-2.5 items-center">
-                      <span className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 ${p.featured ? 'bg-teal/20' : 'bg-teal/10'}`}>
-                        <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 5.7L6.5 2.3" stroke="#19B6B2" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      </span>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <Link href={`/naruci?qty=${p.qty}`}
-                  className={`block text-center py-3 rounded-full font-bold text-sm transition-all ${
-                    p.featured
-                      ? 'bg-orange text-white hover:bg-orange2 shadow-[0_4px_16px_rgba(255,107,74,0.4)]'
-                      : 'border-2 border-[#E2EAF0] text-navy hover:border-teal hover:text-teal'
-                  }`}>
-                  {t('hero_cta')} →
-                </Link>
+          <div className="max-w-sm mx-auto">
+            <div className="bg-navy rounded-3xl p-8 border-2 border-navy shadow-[0_20px_50px_rgba(11,31,59,0.22)] relative">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-orange text-white text-[10px] font-bold px-4 py-1 rounded-full uppercase tracking-widest shadow-[0_4px_12px_rgba(255,107,74,0.4)] whitespace-nowrap">
+                1 privezak
               </div>
-            ))}
+              <div className="text-center mb-6 pt-2">
+                <div className="text-white/40 text-xs font-bold uppercase tracking-widest mb-3">Cena po privetku</div>
+                <div className="text-5xl font-extrabold text-white tracking-tight">
+                  {PRICE_PER_TAG.toLocaleString()}
+                  <span className="text-2xl font-semibold ml-2">RSD</span>
+                </div>
+                <div className="text-white/30 text-sm font-medium mt-1">plaćanje pouzećem</div>
+              </div>
+              <ul className="space-y-3 mb-7 text-sm font-medium text-white/60">
+                {['Doživotni profil ljubimca', 'QR + NFC privezak', 'Nerđajući čelik 29mm', 'Besplatna dostava'].map(item => (
+                  <li key={item} className="flex gap-3 items-center">
+                    <span className="w-5 h-5 rounded-full bg-teal/20 flex items-center justify-center flex-shrink-0">
+                      <svg width="9" height="9" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 5.7L6.5 2.3" stroke="#19B6B2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/naruci" className="block text-center py-3.5 rounded-full font-bold text-sm bg-orange text-white hover:bg-orange2 transition-all shadow-[0_4px_16px_rgba(255,107,74,0.4)]">
+                {t('hero_cta')} →
+              </Link>
+            </div>
           </div>
         </div>
       </section>
