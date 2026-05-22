@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
       const resend = new Resend(process.env.RESEND_API_KEY)
 
       await resend.emails.send({
-        from: process.env.RESEND_FROM || 'obaveštenja@petcode.rs',
+        from: process.env.RESEND_FROM || 'obaveštenja@pet-code.rs',
         to: ownerEmail,
         subject: `📍 ${petName} je pronađen! Evo lokacije`,
         html: `
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     <!-- Header -->
     <div style="background:#1a2d4a;border-radius:16px 16px 0 0;padding:24px;text-align:center;">
       <div style="font-size:32px;margin-bottom:8px;">🐾</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.4);font-family:monospace;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:6px;">petcode.rs</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);font-family:monospace;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:6px;">pet-code.rs</div>
       <div style="font-size:22px;font-weight:900;color:#ffffff;margin-bottom:4px;">${petName} je pronađen!</div>
       <div style="font-size:13px;color:rgba(255,255,255,0.5);">${now} · ${accuracyText}</div>
     </div>
