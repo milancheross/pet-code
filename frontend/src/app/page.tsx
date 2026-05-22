@@ -24,6 +24,7 @@ export default function HomePage() {
           <div className="hidden md:flex items-center gap-7">
             <a href="#kako" className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">{t('nav_how')}</a>
             <a href="#cena" className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">{t('nav_price')}</a>
+            <Link href="/kontakt" className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">Kontakt</Link>
             <Link href="/login" className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">{t('nav_login')}</Link>
           </div>
           <div className="flex items-center gap-3">
@@ -325,7 +326,7 @@ export default function HomePage() {
           <div className="text-xs text-gray-400 font-medium">© 2025 PetCode · Srbija · info@pet-code.rs</div>
           <div className="flex items-center gap-5">
             <Link href="/login" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">{t('nav_login')}</Link>
-            <a href="mailto:info@pet-code.rs" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">Kontakt</a>
+            <Link href="/kontakt" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">Kontakt</Link>
           </div>
         </div>
       </footer>

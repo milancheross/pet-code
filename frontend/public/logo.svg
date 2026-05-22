@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 230" fill="none">
+  <!-- Dog floppy ear (far left) -->
+  <path d="M28 62 C18 52 14 60 16 72 C18 82 26 88 34 84" stroke="#19B6B2" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Dog head + body left -->
+  <path d="M34 84 C30 90 28 100 32 108 C36 116 44 118 52 116 L52 140 L80 140 L80 100 C86 96 90 94 100 94 C110 94 114 96 120 100 L120 140 L148 140 L148 116 C156 118 164 116 168 108 C172 100 170 90 166 84 C174 76 174 62 168 54 C162 46 154 44 148 46 C146 42 144 36 140 32 L134 40 L128 32 C124 36 122 42 120 46 C114 42 108 40 100 40 C92 40 86 44 80 46 C74 42 68 42 62 46 C56 42 50 44 44 50 C38 56 34 68 34 84 Z" stroke="#19B6B2" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- QR tag top connector -->
+  <line x1="100" y1="94" x2="100" y2="104" stroke="#19B6B2" stroke-width="4"/>
+  <!-- QR tag body -->
+  <rect x="74" y="104" width="52" height="52" rx="9" stroke="#19B6B2" stroke-width="4.5" fill="white"/>
+  <!-- QR: top-left corner block -->
+  <rect x="80" y="110" width="14" height="14" rx="2.5" stroke="#19B6B2" stroke-width="2.5" fill="none"/>
+  <rect x="83" y="113" width="8" height="8" rx="1" fill="#19B6B2"/>
+  <!-- QR: top-right corner block -->
+  <rect x="106" y="110" width="14" height="14" rx="2.5" stroke="#19B6B2" stroke-width="2.5" fill="none"/>
+  <rect x="109" y="113" width="8" height="8" rx="1" fill="#19B6B2"/>
+  <!-- QR: bottom-left corner block -->
+  <rect x="80" y="130" width="14" height="14" rx="2.5" stroke="#19B6B2" stroke-width="2.5" fill="none"/>
+  <rect x="83" y="133" width="8" height="8" rx="1" fill="#19B6B2"/>
+  <!-- QR: bottom-right data dots -->
+  <rect x="107" y="130" width="5" height="5" rx="1" fill="#19B6B2"/>
+  <rect x="114" y="130" width="5" height="5" rx="1" fill="#19B6B2"/>
+  <rect x="107" y="137" width="5" height="5" rx="1" fill="#19B6B2"/>
+  <rect x="114" y="137" width="5" height="5" rx="1" fill="#19B6B2"/>
+  <!-- petcode text -->
+  <text x="100" y="192" text-anchor="middle" font-family="Manrope, Arial, sans-serif" font-weight="800" font-size="38" letter-spacing="-1" fill="#0B1F3B">petcode</text>
+</svg>
