@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useLang } from '@/lib/i18n/LangContext'
 import LangSwitcher from '@/components/LangSwitcher'
@@ -7,7 +7,7 @@ import Link from 'next/link'
 import PetCodeLogo from '@/components/PetCodeLogo'
 import { PRICE_PER_TAG } from '@/lib/types'
 
-export default function OrderPage() {
+function OrderForm() {
   const { t } = useLang()
   const params = useSearchParams()
   const initQty = Number(params.get('qty')) || 1
@@ -67,7 +67,6 @@ export default function OrderPage() {
         {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 mb-5 text-sm font-semibold">⚠️ {error}</div>}
 
         <div className="space-y-5">
-          {/* Količina */}
           <div className="card">
             <label className="label">{t('order_qty')}</label>
             <div className="grid grid-cols-3 gap-2 mt-1">
@@ -86,7 +85,6 @@ export default function OrderPage() {
             <div className="text-center text-xs text-gray-400 font-semibold mt-2">💳 {t('order_cod')}</div>
           </div>
 
-          {/* Podaci */}
           <div className="card space-y-4">
             <div><label className="label">{t('order_name')}</label><input className="input" value={name} onChange={e=>setName(e.target.value)} placeholder="Marko Petrović" /></div>
             <div><label className="label">{t('order_phone')}</label><input className="input" type="tel" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+381 64 123 456" /></div>
@@ -106,5 +104,17 @@ export default function OrderPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function OrderPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#F4F7FA]">
+        <div className="text-teal font-black animate-pulse">Učitavanje...</div>
+      </div>
+    }>
+      <OrderForm />
+    </Suspense>
   )
 }
