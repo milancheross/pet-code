@@ -1,12 +1,12 @@
 'use client'
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useLang } from '@/lib/i18n/LangContext'
 import LangSwitcher from '@/components/LangSwitcher'
 import Link from 'next/link'
 import PetCodeLogo from '@/components/PetCodeLogo'
 import { PRICE_PER_TAG } from '@/lib/types'
 
-export default function OrderPage() {
+function OrderForm() {
   const { t } = useLang()
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
@@ -56,12 +56,11 @@ export default function OrderPage() {
       </nav>
 
       <div className="max-w-md mx-auto p-4 pt-8">
-        <h1 className="text-2xl font-black text-navy mb-8 text-center">{t('order_title')}</h1>
+        <h1 className="text-2xl font-extrabold text-navy mb-8 text-center">{t('order_title')}</h1>
 
         {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 mb-5 text-sm font-semibold">⚠️ {error}</div>}
 
         <div className="space-y-5">
-          {/* Cena */}
           <div className="card">
             <div className="flex justify-between items-center mb-3">
               <span className="label mb-0">{t('order_qty')}</span>
@@ -74,7 +73,6 @@ export default function OrderPage() {
             <div className="text-center text-xs text-gray-400 font-semibold mt-2">💳 {t('order_cod')}</div>
           </div>
 
-          {/* Podaci */}
           <div className="card space-y-4">
             <div><label className="label">{t('order_name')}</label><input className="input" value={name} onChange={e=>setName(e.target.value)} placeholder="Marko Petrović" /></div>
             <div><label className="label">{t('order_phone')}</label><input className="input" type="tel" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+381 64 123 456" /></div>
@@ -94,5 +92,17 @@ export default function OrderPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function OrderPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#F4F7FA]">
+        <div className="text-teal font-bold animate-pulse">Učitavanje...</div>
+      </div>
+    }>
+      <OrderForm />
+    </Suspense>
   )
 }
