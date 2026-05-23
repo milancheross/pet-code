@@ -25,6 +25,16 @@ export default function AdminPage() {
       ...(body ? { body: JSON.stringify(body) } : {}),
     }).then(r => r.json())
 
+  const adminDelete = (body: object) =>
+    fetch('/api/admin', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-pin': pinRef.current,
+      },
+      body: JSON.stringify(body),
+    }).then(r => r.json())
+
   const login = async () => {
     if (pin === (process.env.NEXT_PUBLIC_ADMIN_PIN || 'petcode2025')) {
       pinRef.current = pin
@@ -82,6 +92,27 @@ export default function AdminPage() {
 
   const updateQrStatus = async (id: string, status: string) => {
     await adminFetch({ action: 'update_qr', payload: { id, status } })
+    await load()
+  }
+
+  const deleteQr = async (id: string) => {
+    if (!confirm('Da li ste sigurni? Ova akcija je nepovratna.')) return
+    const result = await adminDelete({ action: 'delete_qr', id })
+    if (result.error) { alert('Greška: ' + result.error); return }
+    await load()
+  }
+
+  const deletePet = async (id: string) => {
+    if (!confirm('Da li ste sigurni? Ova akcija je nepovratna.')) return
+    const result = await adminDelete({ action: 'delete_pet', id })
+    if (result.error) { alert('Greška: ' + result.error); return }
+    await load()
+  }
+
+  const deleteOrder = async (id: string) => {
+    if (!confirm('Da li ste sigurni? Ova akcija je nepovratna.')) return
+    const result = await adminDelete({ action: 'delete_order', id })
+    if (result.error) { alert('Greška: ' + result.error); return }
     await load()
   }
 
@@ -216,6 +247,12 @@ export default function AdminPage() {
                         <option key={s} value={s}>{s}</option>
                       )}
                     </select>
+                    <button
+                      onClick={() => deleteOrder(o.id)}
+                      className="text-xs text-red-400 font-bold hover:text-red-600"
+                    >
+                      🗑️
+                    </button>
                   </div>
                 </div>
               </div>
@@ -315,6 +352,14 @@ export default function AdminPage() {
                         Aktiviraj
                       </button>
                     )}
+                    {q.status === 'unused' && (
+                      <button
+                        onClick={() => deleteQr(q.id)}
+                        className="text-xs text-red-400 font-bold hover:text-red-600"
+                      >
+                        🗑️
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -354,6 +399,12 @@ export default function AdminPage() {
                   >
                     →
                   </a>
+                  <button
+                    onClick={() => deletePet(p.id)}
+                    className="text-xs text-red-400 font-bold hover:text-red-600"
+                  >
+                    🗑️
+                  </button>
                 </div>
               </div>
             ))}
