@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 
+function esc(s: string | null | undefined): string {
+  if (!s) return ''
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { pet_id, lat, lng, accuracy } = await req.json()
@@ -23,8 +28,8 @@ export async function POST(req: NextRequest) {
 
     const ownerEmail = pet.owners?.email || null
     const ownerPhone = pet.owners?.phone || null
-    const petName = pet.name
-    const ownerName = pet.owners?.name || 'Vlasniče'
+    const petName = esc(pet.name)
+    const ownerName = esc(pet.owners?.name) || 'Vlasniče'
 
     const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`
     const mapsEmbed = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=16&size=600x300&markers=color:red%7C${lat},${lng}&key=nokey`
@@ -137,8 +142,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ ok: true, mapsUrl })
-  } catch (e: any) {
-    console.error('Location notify error:', e)
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  } catch {
+    return NextResponse.json({ error: 'Greška pri slanju lokacije' }, { status: 500 })
   }
 }

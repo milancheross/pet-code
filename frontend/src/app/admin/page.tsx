@@ -36,13 +36,28 @@ export default function AdminPage() {
     }).then(r => r.json())
 
   const login = async () => {
-    if (pin === (process.env.NEXT_PUBLIC_ADMIN_PIN || 'petcode2025')) {
-      pinRef.current = pin
-      setAuth(true)
-      await load()
-    } else {
+    pinRef.current = pin
+    setLoading(true)
+    const data = await adminFetch()
+    setLoading(false)
+    if (data.error) {
+      pinRef.current = ''
       alert('Pogrešan PIN')
+      return
     }
+    const codes = data.qr || []
+    const ords = data.orders || []
+    setQr(codes)
+    setOrders(ords)
+    setPets(data.pets || [])
+    setStats({
+      total: codes.length,
+      active: codes.filter((c: any) => c.status === 'active').length,
+      unused: codes.filter((c: any) => c.status === 'unused').length,
+      orders: ords.length,
+      revenue: ords.reduce((s: number, o: any) => s + (o.total_rsd || 0), 0),
+    })
+    setAuth(true)
   }
 
   const load = async () => {

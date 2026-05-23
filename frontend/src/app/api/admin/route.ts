@@ -4,8 +4,6 @@ import { createAdminClient } from '@/lib/supabase/server'
 function checkPin(req: NextRequest) {
   const pin = req.headers.get('x-admin-pin')
   const secret = process.env.ADMIN_SECRET || 'petcode2025'
-  console.log('PIN received:', pin)
-  console.log('PIN expected:', secret)
   return pin === secret
 }
 
