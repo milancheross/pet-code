@@ -50,6 +50,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true })
   }
 
+  if (action === 'update_pet') {
+    const { id, ...fields } = payload
+    await sb.from('pets').update(fields).eq('id', id)
+    return NextResponse.json({ ok: true })
+  }
+
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
 }
 
