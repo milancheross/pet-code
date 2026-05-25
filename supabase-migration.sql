@@ -114,3 +114,15 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS sku text;
 
 -- Short description (for grid cards)
 ALTER TABLE products ADD COLUMN IF NOT EXISTS short_description text;
+
+-- =============================================
+-- WooCommerce price system (regular + sale)
+-- =============================================
+ALTER TABLE products ADD COLUMN IF NOT EXISTS regular_price_rsd integer;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS sale_price_rsd integer;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS sale_start date;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS sale_end date;
+
+-- Backfill: copy existing price_rsd → regular_price_rsd
+UPDATE products SET regular_price_rsd = ROUND(price_rsd)::integer
+  WHERE regular_price_rsd IS NULL AND price_rsd IS NOT NULL;
