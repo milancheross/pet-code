@@ -93,3 +93,24 @@ CREATE POLICY "images_public_read" ON product_images FOR SELECT USING (true);
 
 -- Storage policy (authenticated insert via service role)
 -- Service role bypasses RLS automatically.
+
+-- =============================================
+-- WooCommerce-like product enhancements
+-- Run this after the initial migration
+-- =============================================
+
+-- Sale / discount price
+ALTER TABLE products ADD COLUMN IF NOT EXISTS compare_at_price_rsd numeric(10,2);
+
+-- Product badges
+ALTER TABLE products ADD COLUMN IF NOT EXISTS is_featured boolean DEFAULT false;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS is_new boolean DEFAULT false;
+
+-- Stock status
+ALTER TABLE products ADD COLUMN IF NOT EXISTS in_stock boolean DEFAULT true;
+
+-- SKU / product code
+ALTER TABLE products ADD COLUMN IF NOT EXISTS sku text;
+
+-- Short description (for grid cards)
+ALTER TABLE products ADD COLUMN IF NOT EXISTS short_description text;

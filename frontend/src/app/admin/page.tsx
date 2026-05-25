@@ -20,7 +20,10 @@ export default function AdminPage() {
   const [shopProducts, setShopProducts] = useState<any[]>([])
   const [shopModal, setShopModal] = useState<'none'|'add-category'|'add-product'|'edit-product'>('none')
   const [newCategory, setNewCategory] = useState({ name: '', description: '' })
-  const [newProduct, setNewProduct] = useState({ name: '', description: '', price_rsd: '', category_id: '', is_active: true })
+  const [newProduct, setNewProduct] = useState({
+    name: '', description: '', short_description: '', price_rsd: '', compare_at_price_rsd: '',
+    category_id: '', is_active: true, is_featured: false, is_new: false, in_stock: true, sku: '',
+  })
   const [productVariants, setProductVariants] = useState<Array<{type:string,value:string,price_modifier_rsd:string}>>([])
   const [uploadedImages, setUploadedImages] = useState<{ url: string; preview: string }[]>([])
   const [imageUploading, setImageUploading] = useState(false)
@@ -540,21 +543,51 @@ export default function AdminPage() {
               {shopProducts.length === 0
                 ? <p className="text-gray-400 text-sm">Nema proizvoda.</p>
                 : <div className="space-y-2">
-                    {shopProducts.map((prod: any) => (
-                      <div key={prod.id} className="flex items-start justify-between bg-[#F4F7FA] rounded-2xl px-4 py-3 gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="font-bold text-navy text-sm">{prod.name}</div>
-                          <div className="text-xs text-gray-400">{prod.price_rsd} RSD · {prod.categories?.name || 'bez kategorije'} · {(prod.product_variants || []).length} varijacija</div>
-                          <div className={`text-[11px] font-bold mt-0.5 ${prod.is_active ? 'text-teal' : 'text-red-400'}`}>{prod.is_active ? '● Aktivan' : '● Neaktivan'}</div>
+                    {shopProducts.map((prod: any) => {
+                      const mainImg = (prod.product_images || []).sort((a: any, b: any) => a.sort_order - b.sort_order)[0]
+                      const discPct = prod.compare_at_price_rsd && prod.compare_at_price_rsd > prod.price_rsd
+                        ? Math.round(((prod.compare_at_price_rsd - prod.price_rsd) / prod.compare_at_price_rsd) * 100) : 0
+                      return (
+                        <div key={prod.id} className="flex items-start justify-between bg-[#F4F7FA] rounded-2xl px-4 py-3 gap-3">
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            <div className="w-12 h-12 rounded-xl bg-white border border-[#E2EAF0] overflow-hidden flex items-center justify-center flex-shrink-0">
+                              {mainImg
+                                ? <img src={mainImg.url} alt={prod.name} className="w-full h-full object-contain p-0.5" />
+                                : <span className="text-2xl">🐾</span>}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-bold text-navy text-sm truncate">{prod.name}</div>
+                              <div className="text-xs text-gray-400 mt-0.5">
+                                {Number(prod.price_rsd).toLocaleString()} RSD
+                                {discPct > 0 && <span className="ml-1 text-red-500 font-bold">(-{discPct}%)</span>}
+                                {' · '}{prod.categories?.name || 'bez kategorije'}
+                                {' · '}{(prod.product_images || []).length} slika
+                              </div>
+                              <div className="flex gap-1.5 mt-1 flex-wrap">
+                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${prod.is_active ? 'bg-teal/10 text-teal' : 'bg-red-50 text-red-400'}`}>
+                                  {prod.is_active ? '● Aktivan' : '● Neaktivan'}
+                                </span>
+                                {prod.in_stock === false && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">Rasprodato</span>}
+                                {prod.is_featured && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-orange/10 text-orange">⭐ Top</span>}
+                                {prod.is_new && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-teal/10 text-teal">Novo</span>}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <button onClick={async () => {
+                              await adminFetchProducts({ action: 'update_product', payload: { id: prod.id, is_active: !prod.is_active } })
+                              await load()
+                            }} className="text-xs text-teal font-bold hover:underline">{prod.is_active ? 'Deaktiviraj' : 'Aktiviraj'}</button>
+                            <button onClick={async () => {
+                              if (!confirm(`Obriši "${prod.name}"?`)) return
+                              const r = await adminDeleteProduct({ action: 'delete_product', id: prod.id })
+                              if (r.error) { alert('Greška: ' + r.error); return }
+                              await load()
+                            }} className="text-xs text-red-400 font-bold hover:text-red-600">🗑️ Obriši</button>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <button onClick={async () => { await adminFetchProducts({ action: 'update_product', payload: { id: prod.id, is_active: !prod.is_active } }); await load() }}
-                            className="text-xs text-teal font-bold hover:underline">{prod.is_active ? 'Deaktiviraj' : 'Aktiviraj'}</button>
-                          <button onClick={async () => { if (!confirm('Obriši proizvod?')) return; await adminDeleteProduct({ action: 'delete_product', id: prod.id }); await load() }}
-                            className="text-xs text-red-400 font-bold hover:text-red-600">🗑️</button>
-                        </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
               }
             </div>
@@ -577,27 +610,74 @@ export default function AdminPage() {
             )}
 
             {/* Add product modal */}
-            {shopModal === 'add-product' && (
+            {shopModal === 'add-product' && (() => {
+              const discPct = newProduct.compare_at_price_rsd && newProduct.price_rsd
+                && parseFloat(newProduct.compare_at_price_rsd) > parseFloat(newProduct.price_rsd)
+                ? Math.round(((parseFloat(newProduct.compare_at_price_rsd) - parseFloat(newProduct.price_rsd)) / parseFloat(newProduct.compare_at_price_rsd)) * 100)
+                : 0
+              return (
               <div className="fixed inset-0 bg-navy/50 z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={() => setShopModal('none')}>
                 <div className="bg-white rounded-3xl p-6 w-full max-w-lg my-4" onClick={e => e.stopPropagation()}>
-                  <h3 className="font-black text-navy mb-4">Novi proizvod</h3>
-                  <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
-                    <div><label className="label">Naziv *</label><input className="input" value={newProduct.name} onChange={e => setNewProduct(p => ({...p, name: e.target.value}))} /></div>
-                    <div><label className="label">Opis</label><textarea className="input resize-none h-20" value={newProduct.description} onChange={e => setNewProduct(p => ({...p, description: e.target.value}))} /></div>
-                    <div><label className="label">Cena (RSD) *</label><input className="input" type="number" value={newProduct.price_rsd} onChange={e => setNewProduct(p => ({...p, price_rsd: e.target.value}))} /></div>
-                    <div>
-                      <label className="label">Kategorija</label>
-                      <select className="input" value={newProduct.category_id} onChange={e => setNewProduct(p => ({...p, category_id: e.target.value}))}>
-                        <option value="">— bez kategorije —</option>
-                        {shopCategories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                      </select>
+                  <h3 className="font-black text-navy mb-4 text-lg">Novi proizvod</h3>
+                  <div className="space-y-3 max-h-[65vh] overflow-y-auto pr-1">
+
+                    {/* Naziv */}
+                    <div><label className="label">Naziv *</label><input className="input" value={newProduct.name} onChange={e => setNewProduct(p => ({...p, name: e.target.value}))} placeholder="npr. QR Privezak Premium" /></div>
+
+                    {/* Kratki opis (za karticu) */}
+                    <div><label className="label">Kratki opis <span className="text-gray-400 font-normal">(za karticu u prodavnici)</span></label><input className="input" value={newProduct.short_description} onChange={e => setNewProduct(p => ({...p, short_description: e.target.value}))} placeholder="Jedna rečenica..." /></div>
+
+                    {/* Pun opis */}
+                    <div><label className="label">Pun opis</label><textarea className="input resize-none h-20" value={newProduct.description} onChange={e => setNewProduct(p => ({...p, description: e.target.value}))} /></div>
+
+                    {/* Cena + Stara cena */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="label">Cena (RSD) *</label>
+                        <input className="input" type="number" value={newProduct.price_rsd} onChange={e => setNewProduct(p => ({...p, price_rsd: e.target.value}))} placeholder="1500" />
+                      </div>
+                      <div>
+                        <label className="label">
+                          Stara cena (RSD)
+                          {discPct > 0 && <span className="ml-1 text-red-500 font-black">-{discPct}%</span>}
+                        </label>
+                        <input className="input" type="number" value={newProduct.compare_at_price_rsd} onChange={e => setNewProduct(p => ({...p, compare_at_price_rsd: e.target.value}))} placeholder="Opcionalno" />
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <input type="checkbox" id="is_active" checked={newProduct.is_active} onChange={e => setNewProduct(p => ({...p, is_active: e.target.checked}))} className="w-4 h-4" />
-                      <label htmlFor="is_active" className="label mb-0">Aktivan (vidljiv u prodavnici)</label>
+
+                    {/* SKU + Kategorija */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="label">SKU / Šifra</label>
+                        <input className="input" value={newProduct.sku} onChange={e => setNewProduct(p => ({...p, sku: e.target.value}))} placeholder="PC-001" />
+                      </div>
+                      <div>
+                        <label className="label">Kategorija</label>
+                        <select className="input" value={newProduct.category_id} onChange={e => setNewProduct(p => ({...p, category_id: e.target.value}))}>
+                          <option value="">— bez —</option>
+                          {shopCategories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                      </div>
                     </div>
+
+                    {/* Status checkboxes */}
+                    <div className="bg-[#F4F7FA] rounded-2xl p-3 grid grid-cols-2 gap-2">
+                      {[
+                        { key: 'is_active',   label: '✅ Aktivan (vidljiv)' },
+                        { key: 'in_stock',    label: '📦 Na stanju' },
+                        { key: 'is_featured', label: '⭐ Istaknuti proizvod' },
+                        { key: 'is_new',      label: '🆕 Označi kao NOVO' },
+                      ].map(({ key, label }) => (
+                        <label key={key} className="flex items-center gap-2 text-sm font-semibold text-gray-600 cursor-pointer">
+                          <input type="checkbox" checked={(newProduct as any)[key]} onChange={e => setNewProduct(p => ({...p, [key]: e.target.checked}))} className="w-4 h-4 accent-teal" />
+                          {label}
+                        </label>
+                      ))}
+                    </div>
+
+                    {/* Varijacije */}
                     <div>
-                      <label className="label">Varijacije</label>
+                      <label className="label">Varijacije <span className="text-gray-400 font-normal">(boja, veličina, materijal)</span></label>
                       {productVariants.map((v, i) => (
                         <div key={i} className="flex gap-2 mb-2 items-center">
                           <select className="input text-sm flex-1" value={v.type} onChange={e => setProductVariants(prev => prev.map((x, j) => j === i ? {...x, type: e.target.value} : x))}>
@@ -606,42 +686,32 @@ export default function AdminPage() {
                             <option value="material">Materijal</option>
                           </select>
                           <input className="input text-sm flex-1" placeholder="vrednost" value={v.value} onChange={e => setProductVariants(prev => prev.map((x, j) => j === i ? {...x, value: e.target.value} : x))} />
-                          <input className="input text-sm w-20" placeholder="+/- RSD" value={v.price_modifier_rsd} onChange={e => setProductVariants(prev => prev.map((x, j) => j === i ? {...x, price_modifier_rsd: e.target.value} : x))} />
-                          <button onClick={() => setProductVariants(prev => prev.filter((_, j) => j !== i))} className="text-red-400 font-bold text-sm">✕</button>
+                          <input className="input text-sm w-24" placeholder="+/- RSD" value={v.price_modifier_rsd} onChange={e => setProductVariants(prev => prev.map((x, j) => j === i ? {...x, price_modifier_rsd: e.target.value} : x))} />
+                          <button onClick={() => setProductVariants(prev => prev.filter((_, j) => j !== i))} className="text-red-400 font-bold text-sm hover:text-red-600">✕</button>
                         </div>
                       ))}
                       <button onClick={() => setProductVariants(prev => [...prev, { type: 'color', value: '', price_modifier_rsd: '0' }])} className="text-sm text-teal font-bold hover:underline">+ Dodaj varijaciju</button>
                     </div>
+
+                    {/* Slike */}
                     <div>
-                      <label className="label">Slike</label>
-                      {/* Hidden file input */}
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        className="hidden"
-                        onChange={handleImageUpload}
-                      />
-                      {/* Thumbnails */}
+                      <label className="label">Slike proizvoda</label>
+                      <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
                       {uploadedImages.length > 0 && (
                         <div className="flex flex-wrap gap-2 mb-3">
                           {uploadedImages.map((img, i) => (
-                            <div key={i} className="relative w-20 h-20 rounded-2xl overflow-hidden border border-[#E2EAF0] group flex-shrink-0">
-                              <img src={img.preview} alt="" className="w-full h-full object-cover" />
+                            <div key={i} className="relative w-20 h-20 rounded-2xl overflow-hidden border border-[#E2EAF0] group flex-shrink-0 bg-[#F4F7FA]">
+                              <img src={img.preview} alt="" className="w-full h-full object-contain p-1" />
                               <button
                                 type="button"
                                 onClick={() => setUploadedImages(prev => prev.filter((_, j) => j !== i))}
-                                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity leading-none"
+                                className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity leading-none"
                               >✕</button>
-                              <div className="absolute bottom-0 left-0 right-0 bg-black/30 text-white text-[8px] text-center py-0.5 font-medium">
-                                {i + 1}
-                              </div>
+                              <div className="absolute bottom-0 left-0 right-0 bg-black/30 text-white text-[8px] text-center py-0.5 font-medium">{i + 1}</div>
                             </div>
                           ))}
                         </div>
                       )}
-                      {/* Upload button */}
                       <button
                         type="button"
                         disabled={imageUploading}
@@ -649,46 +719,52 @@ export default function AdminPage() {
                         className="flex items-center gap-2 px-4 py-3 rounded-2xl border-2 border-dashed border-[#E2EAF0] text-sm font-semibold text-gray-400 hover:border-teal hover:text-teal transition-colors disabled:opacity-50 w-full justify-center"
                       >
                         {imageUploading ? (
-                          <>
-                            <svg className="animate-spin w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"/>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                            </svg>
-                            Uploadujem...
-                          </>
-                        ) : (
-                          <>📷 Dodaj slike</>
-                        )}
+                          <><svg className="animate-spin w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Uploadujem...</>
+                        ) : <>📷 Dodaj slike</>}
                       </button>
                       <p className="text-[11px] text-gray-400 mt-1.5 text-center">JPG, PNG, WebP · Više slika odjednom</p>
                     </div>
                   </div>
+
                   <div className="flex gap-2 mt-5">
                     <button onClick={async () => {
                       if (!newProduct.name || !newProduct.price_rsd) { alert('Unesite naziv i cenu'); return }
-                      const res = await adminFetchProducts({ action: 'create_product', payload: { name: newProduct.name, description: newProduct.description, price_rsd: parseFloat(newProduct.price_rsd), category_id: newProduct.category_id || null, is_active: newProduct.is_active } })
+                      const payload: any = {
+                        name: newProduct.name,
+                        description: newProduct.description || null,
+                        short_description: newProduct.short_description || null,
+                        price_rsd: parseFloat(newProduct.price_rsd),
+                        compare_at_price_rsd: newProduct.compare_at_price_rsd ? parseFloat(newProduct.compare_at_price_rsd) : null,
+                        category_id: newProduct.category_id || null,
+                        is_active: newProduct.is_active,
+                        is_featured: newProduct.is_featured,
+                        is_new: newProduct.is_new,
+                        in_stock: newProduct.in_stock,
+                        sku: newProduct.sku || null,
+                      }
+                      const res = await adminFetchProducts({ action: 'create_product', payload })
                       if (res.error) { alert('Greška: ' + res.error); return }
                       const pid = res.product?.id
                       if (pid) {
-                        for (let i = 0; i < productVariants.length; i++) {
-                          const v = productVariants[i]
+                        for (const v of productVariants) {
                           if (v.value) await adminFetchProducts({ action: 'add_variant', payload: { product_id: pid, name: v.value, type: v.type, value: v.value, price_modifier_rsd: parseFloat(v.price_modifier_rsd) || 0 } })
                         }
                         for (let i = 0; i < uploadedImages.length; i++) {
                           await adminFetchProducts({ action: 'add_image', payload: { product_id: pid, url: uploadedImages[i].url, sort_order: i } })
                         }
                       }
-                      setNewProduct({ name: '', description: '', price_rsd: '', category_id: '', is_active: true })
+                      setNewProduct({ name: '', description: '', short_description: '', price_rsd: '', compare_at_price_rsd: '', category_id: '', is_active: true, is_featured: false, is_new: false, in_stock: true, sku: '' })
                       setProductVariants([])
                       setUploadedImages([])
                       setShopModal('none')
                       await load()
-                    }} className="btn-primary flex-1">Sačuvaj proizvod</button>
+                    }} className="btn-primary flex-1">💾 Sačuvaj proizvod</button>
                     <button onClick={() => setShopModal('none')} className="btn-outline flex-1">Otkaži</button>
                   </div>
                 </div>
               </div>
-            )}
+              )
+            })()}
           </div>
         )}
 
