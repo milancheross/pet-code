@@ -14,19 +14,22 @@ export default function AdminPage() {
   const [gen, setGen] = useState(50)
   const [filter, setFilter] = useState<'all'|'unused'|'active'>('all')
   const [search, setSearch] = useState('')
+
   // Shop state
   const [shopCategories, setShopCategories] = useState<any[]>([])
   const [shopProducts, setShopProducts] = useState<any[]>([])
-  const [shopModal, setShopModal] = useState<'none'|'add-category'|'add-product'>('none')
+  const [shopModal, setShopModal] = useState<'none'|'add-category'|'add-product'|'edit-product'>('none')
   const [newCategory, setNewCategory] = useState({ name: '', description: '' })
   const [newProduct, setNewProduct] = useState({ name: '', description: '', price_rsd: '', category_id: '', is_active: true })
   const [productVariants, setProductVariants] = useState<Array<{type:string,value:string,price_modifier_rsd:string}>>([])
-  const [productImageUrls, setProductImageUrls] = useState<string[]>([])
-  // Pet modal state
+  const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([])
+
+  // Pet modals
   const [petPreview, setPetPreview] = useState<any>(null)
   const [petEdit, setPetEdit] = useState<any>(null)
   const [petEditForm, setPetEditForm] = useState<any>({})
-  // Order modal state
+
+  // Order modal
   const [orderPreview, setOrderPreview] = useState<any>(null)
 
   const adminFetch = (body?: object) =>
@@ -37,6 +40,16 @@ export default function AdminPage() {
         'x-admin-pin': pinRef.current,
       },
       ...(body ? { body: JSON.stringify(body) } : {}),
+    }).then(r => r.json())
+
+  const adminDelete = (body: object) =>
+    fetch('/api/admin', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-pin': pinRef.current,
+      },
+      body: JSON.stringify(body),
     }).then(r => r.json())
 
   const adminFetchProducts = (body?: object) =>
@@ -50,16 +63,6 @@ export default function AdminPage() {
     fetch('/api/admin/products', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json', 'x-admin-pin': pinRef.current },
-      body: JSON.stringify(body),
-    }).then(r => r.json())
-
-  const adminDelete = (body: object) =>
-    fetch('/api/admin', {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-admin-pin': pinRef.current,
-      },
       body: JSON.stringify(body),
     }).then(r => r.json())
 
@@ -90,14 +93,15 @@ export default function AdminPage() {
 
   const load = async () => {
     setLoading(true)
-    const [data, shopData] = await Promise.all([adminFetch(), adminFetchProducts()])
+    const [data, shopData] = await Promise.all([
+      adminFetch(),
+      adminFetchProducts(),
+    ])
     const codes = data.qr || []
     const ords = data.orders || []
     setQr(codes)
     setOrders(ords)
     setPets(data.pets || [])
-    setShopCategories(shopData.categories || [])
-    setShopProducts(shopData.products || [])
     setStats({
       total: codes.length,
       active: codes.filter((c:any) => c.status === 'active').length,
@@ -105,6 +109,8 @@ export default function AdminPage() {
       orders: ords.length,
       revenue: ords.reduce((s:number, o:any) => s + (o.total_rsd || 0), 0),
     })
+    setShopCategories(shopData.categories || [])
+    setShopProducts(shopData.products || [])
     setLoading(false)
   }
 
@@ -235,7 +241,7 @@ export default function AdminPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-4">
+        <div className="flex gap-2 mb-4 flex-wrap">
           {(['orders', 'qr', 'pets', 'shop'] as const).map(t2 => (
             <button key={t2} onClick={() => setTab(t2)}
               className={`px-4 py-2 rounded-full text-sm font-black border-2 transition-all ${
@@ -283,7 +289,6 @@ export default function AdminPage() {
                     <span className={`text-[11px] font-black px-2 py-1 rounded-full ${STATUS_COLORS[o.status] || ''}`}>
                       {o.status}
                     </span>
-                    <button onClick={() => setOrderPreview(o)} className="text-xs text-blue-500 font-bold hover:underline">👁️</button>
                     <select
                       className="text-xs border border-[#e2f0ef] rounded-xl px-2 py-1 font-semibold text-gray-500 bg-white"
                       value={o.status}
@@ -293,6 +298,7 @@ export default function AdminPage() {
                         <option key={s} value={s}>{s}</option>
                       )}
                     </select>
+                    <button onClick={() => setOrderPreview(o)} className="text-xs text-blue-500 font-bold hover:underline">👁️</button>
                     <button
                       onClick={() => deleteOrder(o.id)}
                       className="text-xs text-red-400 font-bold hover:text-red-600"
@@ -439,7 +445,10 @@ export default function AdminPage() {
                     </span>
                   )}
                   <button onClick={() => setPetPreview(p)} className="text-xs text-blue-500 font-bold hover:underline">👁️</button>
-                  <button onClick={() => { setPetEdit(p); setPetEditForm({ color: p.color||'', age: p.age||'', allergies: p.allergies||'', medication: p.medication||'', vet_info: p.vet_info||'', note: p.note||'', is_lost: p.is_lost||false }) }} className="text-xs text-orange font-bold hover:underline">✏️</button>
+                  <button onClick={() => {
+                    setPetEdit(p)
+                    setPetEditForm({ color: p.color || '', age: p.age || '', allergies: p.allergies || '', medication: p.medication || '', vet_info: p.vet_info || '', note: p.note || '', is_lost: p.is_lost || false })
+                  }} className="text-xs text-orange font-bold hover:underline">✏️</button>
                   <a
                     href={`/ljubimac/${p.id}`}
                     target="_blank"
@@ -466,7 +475,7 @@ export default function AdminPage() {
             <div className="card">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-black text-navy">Kategorije</h3>
-                <button onClick={() => setShopModal('add-category')} className="text-sm bg-teal text-white font-bold px-4 py-2 rounded-full hover:bg-teal2 transition-colors">+ Dodaj</button>
+                <button onClick={() => setShopModal('add-category')} className="btn-teal text-sm px-4 py-2">+ Dodaj</button>
               </div>
               {shopCategories.length === 0
                 ? <p className="text-gray-400 text-sm">Nema kategorija. Pokrenite SQL migraciju u Supabase.</p>
@@ -477,7 +486,8 @@ export default function AdminPage() {
                           <span className="font-bold text-navy text-sm">{cat.name}</span>
                           <span className="ml-2 text-xs text-gray-400 font-mono">{cat.slug}</span>
                         </div>
-                        <button onClick={async () => { if (!confirm('Obriši kategoriju?')) return; await adminDeleteProduct({ action: 'delete_category', id: cat.id }); await load() }} className="text-xs text-red-400 font-bold hover:text-red-600">🗑️</button>
+                        <button onClick={async () => { if (!confirm('Obriši kategoriju?')) return; await adminDeleteProduct({ action: 'delete_category', id: cat.id }); await load() }}
+                          className="text-xs text-red-400 font-bold hover:text-red-600">🗑️</button>
                       </div>
                     ))}
                   </div>
@@ -487,8 +497,8 @@ export default function AdminPage() {
             {/* Products */}
             <div className="card">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-black text-navy">Proizvodi ({shopProducts.length})</h3>
-                <button onClick={() => { setShopModal('add-product'); setProductVariants([]); setProductImageUrls([]) }} className="text-sm bg-orange text-white font-bold px-4 py-2 rounded-full hover:bg-orange2 transition-colors shadow-[0_4px_12px_rgba(255,107,74,0.3)]">+ Novi proizvod</button>
+                <h3 className="font-black text-navy">Proizvodi</h3>
+                <button onClick={() => { setShopModal('add-product'); setProductVariants([]); setUploadedImageUrls([]) }} className="btn-primary text-sm px-4 py-2">+ Novi proizvod</button>
               </div>
               {shopProducts.length === 0
                 ? <p className="text-gray-400 text-sm">Nema proizvoda.</p>
@@ -497,66 +507,126 @@ export default function AdminPage() {
                       <div key={prod.id} className="flex items-start justify-between bg-[#F4F7FA] rounded-2xl px-4 py-3 gap-3">
                         <div className="flex-1 min-w-0">
                           <div className="font-bold text-navy text-sm">{prod.name}</div>
-                          <div className="text-xs text-gray-400">{prod.price_rsd} RSD · {prod.categories?.name || 'bez kategorije'} · {(prod.product_variants||[]).length} varijacija</div>
+                          <div className="text-xs text-gray-400">{prod.price_rsd} RSD · {prod.categories?.name || 'bez kategorije'} · {(prod.product_variants || []).length} varijacija</div>
                           <div className={`text-[11px] font-bold mt-0.5 ${prod.is_active ? 'text-teal' : 'text-red-400'}`}>{prod.is_active ? '● Aktivan' : '● Neaktivan'}</div>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          <button onClick={async () => { await adminFetchProducts({ action: 'update_product', payload: { id: prod.id, is_active: !prod.is_active } }); await load() }} className="text-xs text-teal font-bold hover:underline">{prod.is_active ? 'Deak.' : 'Akt.'}</button>
-                          <button onClick={async () => { if (!confirm('Obriši proizvod?')) return; await adminDeleteProduct({ action: 'delete_product', id: prod.id }); await load() }} className="text-xs text-red-400 font-bold hover:text-red-600">🗑️</button>
+                          <button onClick={async () => { await adminFetchProducts({ action: 'update_product', payload: { id: prod.id, is_active: !prod.is_active } }); await load() }}
+                            className="text-xs text-teal font-bold hover:underline">{prod.is_active ? 'Deaktiviraj' : 'Aktiviraj'}</button>
+                          <button onClick={async () => { if (!confirm('Obriši proizvod?')) return; await adminDeleteProduct({ action: 'delete_product', id: prod.id }); await load() }}
+                            className="text-xs text-red-400 font-bold hover:text-red-600">🗑️</button>
                         </div>
                       </div>
                     ))}
                   </div>
               }
             </div>
+
+            {/* Add category modal */}
+            {shopModal === 'add-category' && (
+              <div className="fixed inset-0 bg-navy/50 z-50 flex items-center justify-center p-4" onClick={() => setShopModal('none')}>
+                <div className="bg-white rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+                  <h3 className="font-black text-navy mb-4">Nova kategorija</h3>
+                  <div className="space-y-3">
+                    <div><label className="label">Naziv</label><input className="input" value={newCategory.name} onChange={e => setNewCategory(p => ({...p, name: e.target.value}))} placeholder="npr. Privesci" /></div>
+                    <div><label className="label">Opis</label><input className="input" value={newCategory.description} onChange={e => setNewCategory(p => ({...p, description: e.target.value}))} /></div>
+                  </div>
+                  <div className="flex gap-2 mt-5">
+                    <button onClick={async () => { await adminFetchProducts({ action: 'create_category', payload: newCategory }); setNewCategory({ name: '', description: '' }); setShopModal('none'); await load() }} className="btn-primary flex-1">Sačuvaj</button>
+                    <button onClick={() => setShopModal('none')} className="btn-outline flex-1">Otkaži</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Add product modal */}
+            {shopModal === 'add-product' && (
+              <div className="fixed inset-0 bg-navy/50 z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={() => setShopModal('none')}>
+                <div className="bg-white rounded-3xl p-6 w-full max-w-lg my-4" onClick={e => e.stopPropagation()}>
+                  <h3 className="font-black text-navy mb-4">Novi proizvod</h3>
+                  <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+                    <div><label className="label">Naziv *</label><input className="input" value={newProduct.name} onChange={e => setNewProduct(p => ({...p, name: e.target.value}))} /></div>
+                    <div><label className="label">Opis</label><textarea className="input resize-none h-20" value={newProduct.description} onChange={e => setNewProduct(p => ({...p, description: e.target.value}))} /></div>
+                    <div><label className="label">Cena (RSD) *</label><input className="input" type="number" value={newProduct.price_rsd} onChange={e => setNewProduct(p => ({...p, price_rsd: e.target.value}))} /></div>
+                    <div>
+                      <label className="label">Kategorija</label>
+                      <select className="input" value={newProduct.category_id} onChange={e => setNewProduct(p => ({...p, category_id: e.target.value}))}>
+                        <option value="">— bez kategorije —</option>
+                        {shopCategories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <input type="checkbox" id="is_active" checked={newProduct.is_active} onChange={e => setNewProduct(p => ({...p, is_active: e.target.checked}))} className="w-4 h-4" />
+                      <label htmlFor="is_active" className="label mb-0">Aktivan (vidljiv u prodavnici)</label>
+                    </div>
+                    <div>
+                      <label className="label">Varijacije</label>
+                      {productVariants.map((v, i) => (
+                        <div key={i} className="flex gap-2 mb-2 items-center">
+                          <select className="input text-sm flex-1" value={v.type} onChange={e => setProductVariants(prev => prev.map((x, j) => j === i ? {...x, type: e.target.value} : x))}>
+                            <option value="color">Boja</option>
+                            <option value="size">Veličina</option>
+                            <option value="material">Materijal</option>
+                          </select>
+                          <input className="input text-sm flex-1" placeholder="vrednost" value={v.value} onChange={e => setProductVariants(prev => prev.map((x, j) => j === i ? {...x, value: e.target.value} : x))} />
+                          <input className="input text-sm w-20" placeholder="+/- RSD" value={v.price_modifier_rsd} onChange={e => setProductVariants(prev => prev.map((x, j) => j === i ? {...x, price_modifier_rsd: e.target.value} : x))} />
+                          <button onClick={() => setProductVariants(prev => prev.filter((_, j) => j !== i))} className="text-red-400 font-bold text-sm">✕</button>
+                        </div>
+                      ))}
+                      <button onClick={() => setProductVariants(prev => [...prev, { type: 'color', value: '', price_modifier_rsd: '0' }])} className="text-sm text-teal font-bold hover:underline">+ Dodaj varijaciju</button>
+                    </div>
+                    <div>
+                      <label className="label">URL slika</label>
+                      {uploadedImageUrls.map((url, i) => (
+                        <div key={i} className="flex gap-2 mb-2">
+                          <input className="input text-sm flex-1" value={url} onChange={e => setUploadedImageUrls(prev => prev.map((x, j) => j === i ? e.target.value : x))} placeholder="https://..." />
+                          <button onClick={() => setUploadedImageUrls(prev => prev.filter((_, j) => j !== i))} className="text-red-400 font-bold text-sm">✕</button>
+                        </div>
+                      ))}
+                      <button onClick={() => setUploadedImageUrls(prev => [...prev, ''])} className="text-sm text-teal font-bold hover:underline">+ Dodaj URL slike</button>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-5">
+                    <button onClick={async () => {
+                      if (!newProduct.name || !newProduct.price_rsd) { alert('Unesite naziv i cenu'); return }
+                      const res = await adminFetchProducts({ action: 'create_product', payload: { name: newProduct.name, description: newProduct.description, price_rsd: parseFloat(newProduct.price_rsd), category_id: newProduct.category_id || null, is_active: newProduct.is_active } })
+                      if (res.error) { alert('Greška: ' + res.error); return }
+                      const pid = res.product?.id
+                      if (pid) {
+                        for (let i = 0; i < productVariants.length; i++) {
+                          const v = productVariants[i]
+                          if (v.value) await adminFetchProducts({ action: 'add_variant', payload: { product_id: pid, name: v.value, type: v.type, value: v.value, price_modifier_rsd: parseFloat(v.price_modifier_rsd) || 0 } })
+                        }
+                        for (let i = 0; i < uploadedImageUrls.length; i++) {
+                          if (uploadedImageUrls[i]) await adminFetchProducts({ action: 'add_image', payload: { product_id: pid, url: uploadedImageUrls[i], sort_order: i } })
+                        }
+                      }
+                      setNewProduct({ name: '', description: '', price_rsd: '', category_id: '', is_active: true })
+                      setProductVariants([])
+                      setUploadedImageUrls([])
+                      setShopModal('none')
+                      await load()
+                    }} className="btn-primary flex-1">Sačuvaj proizvod</button>
+                    <button onClick={() => setShopModal('none')} className="btn-outline flex-1">Otkaži</button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
       </div>
 
-      {/* ===== MODALS ===== */}
-
-      {/* Order preview modal */}
-      {orderPreview && (
-        <div className="fixed inset-0 bg-navy/60 z-50 flex items-center justify-center p-4" onClick={() => setOrderPreview(null)}>
-          <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-black text-navy">Narudžbina #{(orderPreview.id||'').slice(-8)}</h3>
-              <button onClick={() => setOrderPreview(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-bold text-gray-500 hover:bg-gray-200">✕</button>
-            </div>
-            <div className="space-y-0 text-sm">
-              {([
-                ['Kupac', orderPreview.customer_name],
-                ['Telefon', orderPreview.customer_phone],
-                ['Email', orderPreview.customer_email || '—'],
-                ['Adresa', `${orderPreview.address}, ${orderPreview.city}`],
-                ['Količina', `${orderPreview.quantity}x privezak`],
-                ['Ukupno', `${orderPreview.total_rsd} RSD`],
-                ['Status', orderPreview.status],
-                ['Napomena', orderPreview.note || '—'],
-                ['Datum', new Date(orderPreview.created_at).toLocaleString('sr')],
-              ] as [string,string][]).map(([l,v]) => (
-                <div key={l} className="flex justify-between py-2 border-b border-[#E2EAF0] last:border-0">
-                  <span className="text-gray-400 font-semibold">{l}</span>
-                  <span className="font-bold text-navy text-right max-w-[60%]">{v}</span>
-                </div>
-              ))}
-            </div>
-            <button onClick={() => setOrderPreview(null)} className="btn-outline block text-center mt-4 w-full text-sm">Zatvori</button>
-          </div>
-        </div>
-      )}
-
       {/* Pet preview modal */}
       {petPreview && (
         <div className="fixed inset-0 bg-navy/60 z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={() => setPetPreview(null)}>
-          <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl my-4" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-black text-navy">Profil: {petPreview.name}</h3>
-              <button onClick={() => setPetPreview(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-bold text-gray-500 hover:bg-gray-200">✕</button>
+              <button onClick={() => setPetPreview(null)} className="text-gray-400 hover:text-navy font-bold text-xl">✕</button>
             </div>
-            <div className="text-sm">
-              {([
+            <div className="space-y-2 text-sm">
+              {[
                 ['Ime', petPreview.name],
                 ['Vrsta', petPreview.species],
                 ['Rasa', petPreview.breed],
@@ -570,8 +640,8 @@ export default function AdminPage() {
                 ['Napomena', petPreview.note],
                 ['Izgubljen', petPreview.is_lost ? '⚠️ DA' : 'Ne'],
                 ['QR kod', petPreview.qr_codes?.code],
-              ] as [string, any][]).filter(([,v]) => v).map(([l,v]) => (
-                <div key={l} className="flex justify-between py-2 border-b border-[#E2EAF0] last:border-0">
+              ].filter(([, v]) => v).map(([l, v]) => (
+                <div key={l as string} className="flex justify-between py-1.5 border-b border-[#E2EAF0]">
                   <span className="text-gray-400 font-semibold">{l}</span>
                   <span className="font-bold text-navy text-right max-w-[60%]">{v}</span>
                 </div>
@@ -585,31 +655,43 @@ export default function AdminPage() {
       {/* Pet edit modal */}
       {petEdit && (
         <div className="fixed inset-0 bg-navy/60 z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={() => setPetEdit(null)}>
-          <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl my-4" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-black text-navy">Uredi: {petEdit.name}</h3>
-              <button onClick={() => setPetEdit(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-bold text-gray-500 hover:bg-gray-200">✕</button>
+              <button onClick={() => setPetEdit(null)} className="text-gray-400 hover:text-navy font-bold text-xl">✕</button>
             </div>
-            <div className="space-y-3 max-h-[55vh] overflow-y-auto pr-1">
-              {([['color','Boja'],['age','Starost'],['allergies','Alergije'],['medication','Lekovi'],['vet_info','Veterinar']] as [string,string][]).map(([field,label]) => (
+            <div className="space-y-3">
+              {([
+                ['color', 'Boja', 'text'],
+                ['age', 'Starost', 'text'],
+                ['allergies', 'Alergije', 'text'],
+                ['medication', 'Lekovi', 'text'],
+                ['vet_info', 'Veterinar', 'text'],
+                ['note', 'Napomena', 'textarea'],
+              ] as [string, string, string][]).map(([field, label, type]) => (
                 <div key={field}>
                   <label className="label">{label}</label>
-                  <input className="input" value={petEditForm[field]||''} onChange={e => setPetEditForm((p: any) => ({...p,[field]:e.target.value}))} />
+                  {type === 'textarea'
+                    ? <textarea className="input resize-none h-16" value={petEditForm[field] || ''} onChange={e => setPetEditForm((p: any) => ({...p, [field]: e.target.value}))} />
+                    : <input className="input" value={petEditForm[field] || ''} onChange={e => setPetEditForm((p: any) => ({...p, [field]: e.target.value}))} />
+                  }
                 </div>
               ))}
-              <div>
-                <label className="label">Napomena</label>
-                <textarea className="input resize-none h-16" value={petEditForm.note||''} onChange={e => setPetEditForm((p: any) => ({...p,note:e.target.value}))} />
-              </div>
-              <div className="flex items-center gap-3 pt-1">
-                <input type="checkbox" id="is_lost_e" checked={petEditForm.is_lost||false} onChange={e => setPetEditForm((p: any) => ({...p,is_lost:e.target.checked}))} className="w-4 h-4" />
-                <label htmlFor="is_lost_e" className="text-sm font-bold text-red-500">Označi kao izgubljen</label>
+              <div className="flex items-center gap-3">
+                <input type="checkbox" id="is_lost_edit" checked={petEditForm.is_lost || false} onChange={e => setPetEditForm((p: any) => ({...p, is_lost: e.target.checked}))} className="w-4 h-4" />
+                <label htmlFor="is_lost_edit" className="label mb-0 text-red-500">Izgubljen</label>
               </div>
             </div>
             <div className="flex gap-2 mt-5">
               <button onClick={async () => {
-                await adminFetch({ action: 'update_pet', payload: { id: petEdit.id, ...petEditForm } })
-                setPetEdit(null); await load()
+                const result = await fetch('/api/admin', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'x-admin-pin': pinRef.current },
+                  body: JSON.stringify({ action: 'update_pet', payload: { id: petEdit.id, ...petEditForm } }),
+                }).then(r => r.json())
+                if (result.error) { alert('Greška: ' + result.error); return }
+                setPetEdit(null)
+                await load()
               }} className="btn-primary flex-1">Sačuvaj</button>
               <button onClick={() => setPetEdit(null)} className="btn-outline flex-1">Otkaži</button>
             </div>
@@ -617,91 +699,36 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Add category modal */}
-      {shopModal === 'add-category' && (
-        <div className="fixed inset-0 bg-navy/60 z-50 flex items-center justify-center p-4" onClick={() => setShopModal('none')}>
-          <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
-            <h3 className="font-black text-navy mb-4">Nova kategorija</h3>
-            <div className="space-y-3">
-              <div><label className="label">Naziv *</label><input className="input" value={newCategory.name} onChange={e => setNewCategory(p => ({...p,name:e.target.value}))} placeholder="npr. Privesci" /></div>
-              <div><label className="label">Opis</label><input className="input" value={newCategory.description} onChange={e => setNewCategory(p => ({...p,description:e.target.value}))} /></div>
+      {/* Order preview modal */}
+      {orderPreview && (
+        <div className="fixed inset-0 bg-navy/60 z-50 flex items-center justify-center p-4" onClick={() => setOrderPreview(null)}>
+          <div className="bg-white rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-black text-navy">Narudžbina #{orderPreview.id?.slice(-8)}</h3>
+              <button onClick={() => setOrderPreview(null)} className="text-gray-400 hover:text-navy font-bold text-xl">✕</button>
             </div>
-            <div className="flex gap-2 mt-5">
-              <button onClick={async () => {
-                if (!newCategory.name) { alert('Unesite naziv'); return }
-                await adminFetchProducts({ action: 'create_category', payload: newCategory })
-                setNewCategory({ name:'', description:'' }); setShopModal('none'); await load()
-              }} className="btn-primary flex-1">Sačuvaj</button>
-              <button onClick={() => setShopModal('none')} className="btn-outline flex-1">Otkaži</button>
+            <div className="space-y-2 text-sm">
+              {[
+                ['Kupac', orderPreview.customer_name],
+                ['Telefon', orderPreview.customer_phone],
+                ['Email', orderPreview.customer_email || '—'],
+                ['Adresa', `${orderPreview.address}, ${orderPreview.city}`],
+                ['Količina', `${orderPreview.quantity}x`],
+                ['Ukupno', `${orderPreview.total_rsd} RSD`],
+                ['Status', orderPreview.status],
+                ['Napomena', orderPreview.note || '—'],
+                ['Datum', new Date(orderPreview.created_at).toLocaleString('sr')],
+              ].map(([l, v]) => (
+                <div key={l as string} className="flex justify-between py-1.5 border-b border-[#E2EAF0]">
+                  <span className="text-gray-400 font-semibold">{l}</span>
+                  <span className="font-bold text-navy text-right">{v}</span>
+                </div>
+              ))}
             </div>
+            <button onClick={() => setOrderPreview(null)} className="btn-outline block text-center mt-4 w-full text-sm">Zatvori</button>
           </div>
         </div>
       )}
-
-      {/* Add product modal */}
-      {shopModal === 'add-product' && (
-        <div className="fixed inset-0 bg-navy/60 z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={() => setShopModal('none')}>
-          <div className="bg-white rounded-3xl p-6 w-full max-w-lg shadow-2xl my-4" onClick={e => e.stopPropagation()}>
-            <h3 className="font-black text-navy mb-4">Novi proizvod</h3>
-            <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
-              <div><label className="label">Naziv *</label><input className="input" value={newProduct.name} onChange={e => setNewProduct(p => ({...p,name:e.target.value}))} /></div>
-              <div><label className="label">Opis</label><textarea className="input resize-none h-20" value={newProduct.description} onChange={e => setNewProduct(p => ({...p,description:e.target.value}))} /></div>
-              <div><label className="label">Cena (RSD) *</label><input className="input" type="number" value={newProduct.price_rsd} onChange={e => setNewProduct(p => ({...p,price_rsd:e.target.value}))} /></div>
-              <div>
-                <label className="label">Kategorija</label>
-                <select className="input" value={newProduct.category_id} onChange={e => setNewProduct(p => ({...p,category_id:e.target.value}))}>
-                  <option value="">— bez kategorije —</option>
-                  {shopCategories.map((c:any) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-              </div>
-              <div className="flex items-center gap-3">
-                <input type="checkbox" id="prod_active" checked={newProduct.is_active} onChange={e => setNewProduct(p => ({...p,is_active:e.target.checked}))} className="w-4 h-4" />
-                <label htmlFor="prod_active" className="text-sm font-semibold text-gray-600">Aktivan (vidljiv u prodavnici)</label>
-              </div>
-              <div>
-                <label className="label">Varijacije</label>
-                {productVariants.map((v,i) => (
-                  <div key={i} className="flex gap-2 mb-2 items-center">
-                    <select className="input text-sm flex-1" value={v.type} onChange={e => setProductVariants(prev => prev.map((x,j) => j===i?{...x,type:e.target.value}:x))}>
-                      <option value="color">Boja</option><option value="size">Veličina</option><option value="material">Materijal</option>
-                    </select>
-                    <input className="input text-sm flex-1" placeholder="vrednost" value={v.value} onChange={e => setProductVariants(prev => prev.map((x,j) => j===i?{...x,value:e.target.value}:x))} />
-                    <input className="input text-sm w-20" placeholder="+RSD" value={v.price_modifier_rsd} onChange={e => setProductVariants(prev => prev.map((x,j) => j===i?{...x,price_modifier_rsd:e.target.value}:x))} />
-                    <button onClick={() => setProductVariants(prev => prev.filter((_,j) => j!==i))} className="text-red-400 font-bold">✕</button>
-                  </div>
-                ))}
-                <button onClick={() => setProductVariants(prev => [...prev,{type:'color',value:'',price_modifier_rsd:'0'}])} className="text-sm text-teal font-bold hover:underline">+ Dodaj varijaciju</button>
-              </div>
-              <div>
-                <label className="label">URL slika</label>
-                {productImageUrls.map((url,i) => (
-                  <div key={i} className="flex gap-2 mb-2">
-                    <input className="input text-sm flex-1" value={url} placeholder="https://..." onChange={e => setProductImageUrls(prev => prev.map((x,j) => j===i?e.target.value:x))} />
-                    <button onClick={() => setProductImageUrls(prev => prev.filter((_,j) => j!==i))} className="text-red-400 font-bold">✕</button>
-                  </div>
-                ))}
-                <button onClick={() => setProductImageUrls(prev => [...prev,''])} className="text-sm text-teal font-bold hover:underline">+ Dodaj sliku</button>
-              </div>
-            </div>
-            <div className="flex gap-2 mt-5">
-              <button onClick={async () => {
-                if (!newProduct.name || !newProduct.price_rsd) { alert('Naziv i cena su obavezni'); return }
-                const res = await adminFetchProducts({ action: 'create_product', payload: { name: newProduct.name, description: newProduct.description, price_rsd: parseFloat(newProduct.price_rsd), category_id: newProduct.category_id || null, is_active: newProduct.is_active } })
-                if (res.error) { alert('Greška: ' + res.error); return }
-                const pid = res.product?.id
-                if (pid) {
-                  for (const v of productVariants) { if (v.value) await adminFetchProducts({ action: 'add_variant', payload: { product_id: pid, name: v.value, type: v.type, value: v.value, price_modifier_rsd: parseFloat(v.price_modifier_rsd)||0 } }) }
-                  for (let i=0; i<productImageUrls.length; i++) { if (productImageUrls[i]) await adminFetchProducts({ action: 'add_image', payload: { product_id: pid, url: productImageUrls[i], sort_order: i } }) }
-                }
-                setNewProduct({ name:'', description:'', price_rsd:'', category_id:'', is_active: true })
-                setProductVariants([]); setProductImageUrls([]); setShopModal('none'); await load()
-              }} className="btn-primary flex-1">Sačuvaj proizvod</button>
-              <button onClick={() => setShopModal('none')} className="btn-outline flex-1">Otkaži</button>
-            </div>
-          </div>
-        </div>
-      )}
-
     </div>
   )
 }
