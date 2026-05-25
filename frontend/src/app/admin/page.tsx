@@ -1,6 +1,5 @@
 'use client'
 import { useState, useRef } from 'react'
-import { createClient } from '@/lib/supabase/client'
 
 export default function AdminPage() {
   const [auth, setAuth] = useState(false)
@@ -73,22 +72,31 @@ export default function AdminPage() {
     const files = e.target.files
     if (!files || files.length === 0) return
     setImageUploading(true)
-    const sb = createClient()
     const newImages: { url: string; preview: string }[] = []
     for (const file of Array.from(files)) {
       const preview = URL.createObjectURL(file)
-      const ext = file.name.split('.').pop() || 'jpg'
-      const path = `temp/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      const { error } = await sb.storage.from('product-images').upload(path, file, {
-        contentType: file.type,
-        upsert: true,
-      })
-      if (error) {
-        console.error('Upload greška:', error.message)
-        continue
+      try {
+        // Convert file to base64 and upload via server-side API (service role — bypasses storage RLS)
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onloadend = () => {
+            const result = reader.result as string
+            resolve(result.split(',')[1]) // strip "data:image/...;base64," prefix
+          }
+          reader.onerror = reject
+          reader.readAsDataURL(file)
+        })
+        const ext = file.name.split('.').pop() || 'jpg'
+        const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+        const res = await adminFetchProducts({
+          action: 'upload_image',
+          payload: { product_id: 'temp', filename, base64, mime_type: file.type },
+        })
+        if (res.error) { console.error('Upload greška:', res.error); continue }
+        newImages.push({ url: res.url, preview })
+      } catch (err) {
+        console.error('Upload greška:', err)
       }
-      const { data: { publicUrl } } = sb.storage.from('product-images').getPublicUrl(path)
-      newImages.push({ url: publicUrl, preview })
     }
     setUploadedImages(prev => [...prev, ...newImages])
     setImageUploading(false)

@@ -4,6 +4,9 @@ import HamburgerNav from '@/components/HamburgerNav'
 import { createAdminClient } from '@/lib/supabase/server'
 import type { Metadata } from 'next'
 
+// Always render fresh — no static cache so admin changes appear instantly
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Prodavnica — PetCode.rs',
   description: 'Kvalitetni privesci i dodaci za vaše ljubimce.',

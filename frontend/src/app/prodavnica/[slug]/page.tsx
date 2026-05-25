@@ -4,6 +4,9 @@ import HamburgerNav from '@/components/HamburgerNav'
 import { createAdminClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 
+// Always render fresh — no static cache so admin changes appear instantly
+export const dynamic = 'force-dynamic'
+
 export default async function ProductPage({ params }: { params: { slug: string } }) {
   let product: any = null
   let variants: any[] = []
