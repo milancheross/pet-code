@@ -138,15 +138,13 @@ export default function ProductActions({ productSlug, inStock, priceRsd, variant
                       aria-label={`Boja: ${v.value}`}
                       className={`
                         relative w-9 h-9 rounded-full transition-all duration-150 focus:outline-none
-                        ${isSelected
-                          ? 'ring-2 ring-teal ring-offset-2 scale-110 shadow-md'
-                          : 'ring-1 ring-offset-1 hover:scale-105'
-                        }
+                        ${isSelected ? 'scale-110' : 'hover:scale-105'}
                       `}
                       style={{
                         backgroundColor: colorInfo.bg,
-                        ringColor: isSelected ? undefined : colorInfo.ring,
-                        boxShadow: !isSelected ? `0 0 0 1px ${colorInfo.ring}` : undefined,
+                        boxShadow: isSelected
+                          ? `0 0 0 2px #19B6B2`
+                          : `0 0 0 1.5px ${colorInfo.ring}`,
                       }}
                     >
                       {/* Checkmark when selected */}
