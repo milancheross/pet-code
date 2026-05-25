@@ -39,7 +39,7 @@ export default function ONamaPage() {
               Sve je počelo sa jednostavnom idejom — šta ako svaki ljubimac ima digitalni identitet dostupan svakome ko ga nađe? Bez aplikacije, bez registracije, samo jedan sken.
             </p>
             <p>
-              PetCode je nastao u Arilju 2024. godine, iz ljubavi prema životinjama i vere da moderna tehnologija može da pomogne da se svaki izgubljeni ljubimac vrati kući.
+              PetCode je nastao u Arilju 2026. godine, iz ljubavi prema životinjama i vere da moderna tehnologija može da pomogne da se svaki izgubljeni ljubimac vrati kući.
             </p>
             <p>
               Danas pomažemo vlasnicima u celoj Srbiji da se osećaju sigurno — jer znaju da, bez obzira gde završi njihov ljubimac, pronalazač ima sve informacije potrebne za povratak.
