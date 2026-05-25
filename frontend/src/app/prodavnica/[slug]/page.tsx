@@ -2,7 +2,7 @@ import Link from 'next/link'
 import PetCodeLogo from '@/components/PetCodeLogo'
 import HamburgerNav from '@/components/HamburgerNav'
 import ProductImageGallery from '@/components/ProductImageGallery'
-import QuantitySelector from '@/components/QuantitySelector'
+import ProductActions from '@/components/ProductActions'
 import { createAdminClient } from '@/lib/supabase/server'
 import { unstable_noStore as noStore } from 'next/cache'
 import { notFound } from 'next/navigation'
@@ -39,12 +39,6 @@ export default async function ProductPage({ params }: { params: { slug: string }
     if (!variantsByType[v.type]) variantsByType[v.type] = []
     variantsByType[v.type].push(v)
   })
-
-  const typeLabels: Record<string, string> = {
-    color: 'Boja',
-    size: 'Veličina',
-    material: 'Materijal',
-  }
 
   // Effective price: use sale_price_rsd if active, otherwise regular_price_rsd or price_rsd (back-compat)
   const regularPrice = product.regular_price_rsd ?? product.price_rsd ?? 0
@@ -148,33 +142,12 @@ export default async function ProductPage({ params }: { params: { slug: string }
               </p>
             )}
 
-            {/* Variants */}
-            {Object.entries(variantsByType).map(([type, vars]) => (
-              <div key={type} className="mb-5">
-                <div className="label mb-2">{typeLabels[type] || type}</div>
-                <div className="flex gap-2 flex-wrap">
-                  {vars.map((v: any) => (
-                    <div
-                      key={v.id}
-                      className="px-4 py-2 rounded-full border-2 border-[#E2EAF0] font-semibold text-sm text-gray-600 bg-white hover:border-teal hover:text-teal cursor-pointer transition-colors"
-                    >
-                      {v.value}
-                      {Number(v.price_modifier_rsd) !== 0 && (
-                        <span className="ml-1 text-xs text-gray-400">
-                          ({v.price_modifier_rsd > 0 ? '+' : ''}{Number(v.price_modifier_rsd).toLocaleString()} RSD)
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-
-            {/* Quantity + CTA */}
-            <QuantitySelector
+            {/* Variants + Quantity + CTA (all interactive, client component) */}
+            <ProductActions
               productSlug={product.slug}
               inStock={product.in_stock !== false}
               priceRsd={effectivePrice}
+              variantsByType={variantsByType}
             />
 
             {/* Trust badges */}
