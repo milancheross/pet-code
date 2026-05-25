@@ -12,6 +12,10 @@ function OrderForm() {
   const params = useSearchParams()
   const productSlug = params?.get('product') || null
   const variantId = params?.get('variant') || null
+  const urlQty = parseInt(params?.get('qty') || '1', 10)
+  const urlPrice = parseInt(params?.get('price') || '0', 10)
+
+  const unitPrice = urlPrice > 0 ? urlPrice : PRICE_PER_TAG
 
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
@@ -19,11 +23,12 @@ function OrderForm() {
   const [address, setAddress] = useState('')
   const [city, setCity] = useState('')
   const [note, setNote] = useState('')
+  const [qty, setQty] = useState(Math.max(1, Math.min(99, urlQty)))
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
 
-  const total = PRICE_PER_TAG
+  const total = qty * unitPrice
 
   const handleSubmit = async () => {
     if (!name || !phone || !address || !city) { setError(t('order_required')); return }
@@ -32,7 +37,7 @@ function OrderForm() {
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customer_name: name, customer_phone: phone, customer_email: email || null, address, city, quantity: 1, note: note || null, total_rsd: total, product_slug: productSlug, variant_id: variantId }),
+        body: JSON.stringify({ customer_name: name, customer_phone: phone, customer_email: email || null, address, city, quantity: qty, note: note || null, total_rsd: total, product_slug: productSlug, variant_id: variantId }),
       })
       if (!res.ok) throw new Error()
       setSuccess(true)
@@ -81,8 +86,36 @@ function OrderForm() {
           <div className="card">
             <div className="flex justify-between items-center mb-3">
               <span className="label mb-0">{t('order_qty')}</span>
-              <span className="text-xs text-gray-400 font-semibold">1x privezak</span>
+              {/* Quantity stepper */}
+              <div className="flex items-center gap-0 bg-[#F4F7FA] border-2 border-[#E2EAF0] rounded-full overflow-hidden">
+                <button
+                  onClick={() => setQty(q => Math.max(1, q - 1))}
+                  disabled={qty <= 1}
+                  className="w-9 h-9 flex items-center justify-center text-navy text-xl font-bold hover:bg-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  aria-label="Smanji količinu"
+                >
+                  −
+                </button>
+                <span className="w-8 text-center text-base font-extrabold text-navy select-none">{qty}</span>
+                <button
+                  onClick={() => setQty(q => Math.min(99, q + 1))}
+                  disabled={qty >= 99}
+                  className="w-9 h-9 flex items-center justify-center text-navy text-xl font-bold hover:bg-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  aria-label="Povećaj količinu"
+                >
+                  +
+                </button>
+              </div>
             </div>
+
+            {/* Unit price row (if qty > 1) */}
+            {qty > 1 && (
+              <div className="flex justify-between items-center text-sm text-gray-400 font-semibold mb-3">
+                <span>Cena po komadu</span>
+                <span>{unitPrice.toLocaleString()} RSD</span>
+              </div>
+            )}
+
             <div className="bg-navy rounded-2xl p-5 flex justify-between items-center">
               <span className="text-sm font-bold text-white/50">{t('order_total')}</span>
               <span className="text-3xl font-extrabold text-white tracking-tight">{total.toLocaleString()} <span className="text-lg font-semibold">RSD</span></span>

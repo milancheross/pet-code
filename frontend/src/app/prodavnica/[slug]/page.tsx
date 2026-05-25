@@ -2,6 +2,7 @@ import Link from 'next/link'
 import PetCodeLogo from '@/components/PetCodeLogo'
 import HamburgerNav from '@/components/HamburgerNav'
 import ProductImageGallery from '@/components/ProductImageGallery'
+import QuantitySelector from '@/components/QuantitySelector'
 import { createAdminClient } from '@/lib/supabase/server'
 import { unstable_noStore as noStore } from 'next/cache'
 import { notFound } from 'next/navigation'
@@ -45,9 +46,19 @@ export default async function ProductPage({ params }: { params: { slug: string }
     material: 'Materijal',
   }
 
-  const discountPct = product.compare_at_price_rsd && product.compare_at_price_rsd > product.price_rsd
-    ? Math.round(((product.compare_at_price_rsd - product.price_rsd) / product.compare_at_price_rsd) * 100)
-    : 0
+  // Effective price: use sale_price_rsd if active, otherwise regular_price_rsd or price_rsd (back-compat)
+  const regularPrice = product.regular_price_rsd ?? product.price_rsd ?? 0
+  const now = new Date()
+  const hasSale = product.sale_price_rsd && product.sale_price_rsd < regularPrice &&
+    (!product.sale_start || new Date(product.sale_start) <= now) &&
+    (!product.sale_end   || new Date(product.sale_end)   >= now)
+  const effectivePrice = hasSale ? product.sale_price_rsd : regularPrice
+
+  const discountPct = hasSale
+    ? Math.round((1 - effectivePrice / regularPrice) * 100)
+    : (product.compare_at_price_rsd && product.compare_at_price_rsd > product.price_rsd
+        ? Math.round(((product.compare_at_price_rsd - product.price_rsd) / product.compare_at_price_rsd) * 100)
+        : 0)
 
   return (
     <div className="min-h-screen bg-[#F4F7FA]">
@@ -105,21 +116,21 @@ export default async function ProductPage({ params }: { params: { slug: string }
             {/* Price */}
             <div className="mb-6">
               {discountPct > 0 ? (
-                <div className="flex items-baseline gap-3">
+                <div className="flex items-baseline gap-3 flex-wrap">
                   <span className="text-4xl font-extrabold text-red-500">
-                    {Number(product.price_rsd).toLocaleString()}
+                    {Number(effectivePrice).toLocaleString()}
                     <span className="text-xl font-semibold ml-1">RSD</span>
                   </span>
                   <span className="text-xl text-gray-400 line-through font-medium">
-                    {Number(product.compare_at_price_rsd).toLocaleString()} RSD
+                    {Number(regularPrice).toLocaleString()} RSD
                   </span>
                   <span className="bg-red-50 text-red-500 text-sm font-black px-2 py-0.5 rounded-lg">
-                    Uštediš {(Number(product.compare_at_price_rsd) - Number(product.price_rsd)).toLocaleString()} RSD
+                    Uštediš {(Number(regularPrice) - Number(effectivePrice)).toLocaleString()} RSD
                   </span>
                 </div>
               ) : (
                 <div className="text-4xl font-extrabold text-navy">
-                  {Number(product.price_rsd).toLocaleString()}
+                  {Number(effectivePrice).toLocaleString()}
                   <span className="text-xl font-semibold text-gray-400 ml-2">RSD</span>
                 </div>
               )}
@@ -159,22 +170,12 @@ export default async function ProductPage({ params }: { params: { slug: string }
               </div>
             ))}
 
-            {/* CTA */}
-            <div className="mt-8 space-y-3">
-              <Link
-                href={`/naruci?product=${product.slug}`}
-                className={`block text-center text-base py-4 rounded-full font-bold transition-all ${
-                  product.in_stock !== false
-                    ? 'btn-primary'
-                    : 'bg-gray-200 text-gray-400 cursor-not-allowed pointer-events-none'
-                }`}
-              >
-                {product.in_stock !== false ? 'Naruči sada →' : 'Trenutno nedostupno'}
-              </Link>
-              <p className="text-center text-xs text-gray-400 font-medium">
-                💳 Plaćanje pouzećem · 🚚 Post Express dostava · ✅ Bez registracije
-              </p>
-            </div>
+            {/* Quantity + CTA */}
+            <QuantitySelector
+              productSlug={product.slug}
+              inStock={product.in_stock !== false}
+              priceRsd={effectivePrice}
+            />
 
             {/* Trust badges */}
             <div className="mt-6 bg-[#F4F7FA] rounded-2xl p-4 grid grid-cols-2 gap-3">
