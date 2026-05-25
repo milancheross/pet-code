@@ -1,5 +1,6 @@
 'use client'
 import { useState, useRef } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 export default function AdminPage() {
   const [auth, setAuth] = useState(false)
@@ -22,7 +23,9 @@ export default function AdminPage() {
   const [newCategory, setNewCategory] = useState({ name: '', description: '' })
   const [newProduct, setNewProduct] = useState({ name: '', description: '', price_rsd: '', category_id: '', is_active: true })
   const [productVariants, setProductVariants] = useState<Array<{type:string,value:string,price_modifier_rsd:string}>>([])
-  const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([])
+  const [uploadedImages, setUploadedImages] = useState<{ url: string; preview: string }[]>([])
+  const [imageUploading, setImageUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Pet modals
   const [petPreview, setPetPreview] = useState<any>(null)
@@ -65,6 +68,32 @@ export default function AdminPage() {
       headers: { 'Content-Type': 'application/json', 'x-admin-pin': pinRef.current },
       body: JSON.stringify(body),
     }).then(r => r.json())
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+    setImageUploading(true)
+    const sb = createClient()
+    const newImages: { url: string; preview: string }[] = []
+    for (const file of Array.from(files)) {
+      const preview = URL.createObjectURL(file)
+      const ext = file.name.split('.').pop() || 'jpg'
+      const path = `temp/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { error } = await sb.storage.from('product-images').upload(path, file, {
+        contentType: file.type,
+        upsert: true,
+      })
+      if (error) {
+        console.error('Upload greška:', error.message)
+        continue
+      }
+      const { data: { publicUrl } } = sb.storage.from('product-images').getPublicUrl(path)
+      newImages.push({ url: publicUrl, preview })
+    }
+    setUploadedImages(prev => [...prev, ...newImages])
+    setImageUploading(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
 
   const login = async () => {
     pinRef.current = pin
@@ -498,7 +527,7 @@ export default function AdminPage() {
             <div className="card">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-black text-navy">Proizvodi</h3>
-                <button onClick={() => { setShopModal('add-product'); setProductVariants([]); setUploadedImageUrls([]) }} className="btn-primary text-sm px-4 py-2">+ Novi proizvod</button>
+                <button onClick={() => { setShopModal('add-product'); setProductVariants([]); setUploadedImages([]) }} className="btn-primary text-sm px-4 py-2">+ Novi proizvod</button>
               </div>
               {shopProducts.length === 0
                 ? <p className="text-gray-400 text-sm">Nema proizvoda.</p>
@@ -576,14 +605,54 @@ export default function AdminPage() {
                       <button onClick={() => setProductVariants(prev => [...prev, { type: 'color', value: '', price_modifier_rsd: '0' }])} className="text-sm text-teal font-bold hover:underline">+ Dodaj varijaciju</button>
                     </div>
                     <div>
-                      <label className="label">URL slika</label>
-                      {uploadedImageUrls.map((url, i) => (
-                        <div key={i} className="flex gap-2 mb-2">
-                          <input className="input text-sm flex-1" value={url} onChange={e => setUploadedImageUrls(prev => prev.map((x, j) => j === i ? e.target.value : x))} placeholder="https://..." />
-                          <button onClick={() => setUploadedImageUrls(prev => prev.filter((_, j) => j !== i))} className="text-red-400 font-bold text-sm">✕</button>
+                      <label className="label">Slike</label>
+                      {/* Hidden file input */}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        onChange={handleImageUpload}
+                      />
+                      {/* Thumbnails */}
+                      {uploadedImages.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {uploadedImages.map((img, i) => (
+                            <div key={i} className="relative w-20 h-20 rounded-2xl overflow-hidden border border-[#E2EAF0] group flex-shrink-0">
+                              <img src={img.preview} alt="" className="w-full h-full object-cover" />
+                              <button
+                                type="button"
+                                onClick={() => setUploadedImages(prev => prev.filter((_, j) => j !== i))}
+                                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity leading-none"
+                              >✕</button>
+                              <div className="absolute bottom-0 left-0 right-0 bg-black/30 text-white text-[8px] text-center py-0.5 font-medium">
+                                {i + 1}
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                      <button onClick={() => setUploadedImageUrls(prev => [...prev, ''])} className="text-sm text-teal font-bold hover:underline">+ Dodaj URL slike</button>
+                      )}
+                      {/* Upload button */}
+                      <button
+                        type="button"
+                        disabled={imageUploading}
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center gap-2 px-4 py-3 rounded-2xl border-2 border-dashed border-[#E2EAF0] text-sm font-semibold text-gray-400 hover:border-teal hover:text-teal transition-colors disabled:opacity-50 w-full justify-center"
+                      >
+                        {imageUploading ? (
+                          <>
+                            <svg className="animate-spin w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"/>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                            </svg>
+                            Uploadujem...
+                          </>
+                        ) : (
+                          <>📷 Dodaj slike</>
+                        )}
+                      </button>
+                      <p className="text-[11px] text-gray-400 mt-1.5 text-center">JPG, PNG, WebP · Više slika odjednom</p>
                     </div>
                   </div>
                   <div className="flex gap-2 mt-5">
@@ -597,13 +666,13 @@ export default function AdminPage() {
                           const v = productVariants[i]
                           if (v.value) await adminFetchProducts({ action: 'add_variant', payload: { product_id: pid, name: v.value, type: v.type, value: v.value, price_modifier_rsd: parseFloat(v.price_modifier_rsd) || 0 } })
                         }
-                        for (let i = 0; i < uploadedImageUrls.length; i++) {
-                          if (uploadedImageUrls[i]) await adminFetchProducts({ action: 'add_image', payload: { product_id: pid, url: uploadedImageUrls[i], sort_order: i } })
+                        for (let i = 0; i < uploadedImages.length; i++) {
+                          await adminFetchProducts({ action: 'add_image', payload: { product_id: pid, url: uploadedImages[i].url, sort_order: i } })
                         }
                       }
                       setNewProduct({ name: '', description: '', price_rsd: '', category_id: '', is_active: true })
                       setProductVariants([])
-                      setUploadedImageUrls([])
+                      setUploadedImages([])
                       setShopModal('none')
                       await load()
                     }} className="btn-primary flex-1">Sačuvaj proizvod</button>
