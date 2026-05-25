@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 295" fill="none">
+
+  <!-- Dog: main head + neck outline, facing right -->
+  <path
+    d="M 95 228
+       C 72 222, 52 202, 50 176
+       C 48 152, 56 138, 60 120
+       C 64 102, 60 86, 76 70
+       C 92 55, 118 48, 150 50
+       C 182 52, 208 66, 220 92
+       C 232 118, 226 150, 210 168
+       C 196 184, 178 190, 170 207
+       L 166 228"
+    stroke="#19B6B2" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Dog: floppy ear -->
+  <path
+    d="M 98 72
+       C 80 62, 58 72, 56 93
+       C 54 116, 66 140, 80 150
+       C 90 157, 104 152, 106 136
+       C 108 120, 100 102, 100 84"
+    stroke="#19B6B2" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Cat: head + neck with two pointed ears, facing left -->
+  <path
+    d="M 235 228
+       L 230 213
+       C 222 196, 204 188, 190 172
+       C 175 154, 171 130, 184 113
+       C 194 98, 210 93, 226 98
+       C 230 78, 238 55, 244 41
+       C 248 31, 258 30, 261 43
+       C 265 59, 257 80, 266 90
+       C 275 70, 283 48, 290 35
+       C 294 24, 306 24, 308 38
+       C 313 57, 306 80, 316 90
+       C 338 99, 358 118, 358 145
+       C 358 170, 344 190, 326 202
+       C 312 212, 295 216, 285 228"
+    stroke="#19B6B2" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- QR tag connector -->
+  <line x1="167" y1="215" x2="200" y2="230" stroke="#19B6B2" stroke-width="5" stroke-linecap="round"/>
+  <line x1="233" y1="215" x2="200" y2="230" stroke="#19B6B2" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- QR tag body -->
+  <rect x="174" y="230" width="52" height="52" rx="10" stroke="#19B6B2" stroke-width="6.5" fill="white"/>
+
+  <!-- QR inner ring + center dot -->
+  <rect x="184" y="240" width="32" height="32" rx="5" stroke="#19B6B2" stroke-width="4" fill="none"/>
+  <rect x="191" y="247" width="18" height="18" rx="3" fill="#19B6B2"/>
+
+</svg>

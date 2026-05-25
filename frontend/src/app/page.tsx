@@ -2,6 +2,7 @@
 import { useLang } from '@/lib/i18n/LangContext'
 import LangSwitcher from '@/components/LangSwitcher'
 import PetCodeLogo from '@/components/PetCodeLogo'
+import HamburgerNav from '@/components/HamburgerNav'
 import Link from 'next/link'
 import { useState } from 'react'
 import { PRICE_PER_TAG } from '@/lib/types'
@@ -20,15 +21,17 @@ export default function HomePage() {
       {/* NAV */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#E2EAF0]">
         <div className="max-w-5xl mx-auto px-5 py-3.5 flex items-center justify-between">
-          <PetCodeLogo size="sm" />
-          <div className="hidden md:flex items-center gap-7">
-            <a href="#kako" className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">{t('nav_how')}</a>
-            <a href="#cena" className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">{t('nav_price')}</a>
+          <Link href="/"><PetCodeLogo size="sm" /></Link>
+          <div className="hidden lg:flex items-center gap-7">
+            <Link href="/prodavnica" className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">Prodavnica</Link>
+            <Link href="/o-nama" className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">O nama</Link>
+            <Link href="/kontakt" className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">Kontakt</Link>
             <Link href="/login" className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">{t('nav_login')}</Link>
           </div>
           <div className="flex items-center gap-3">
             <LangSwitcher />
-            <Link href="/naruci" className="btn-primary text-sm px-5 py-2.5">{t('nav_order')}</Link>
+            <Link href="/naruci" className="hidden sm:block btn-primary text-sm px-5 py-2.5">{t('nav_order')}</Link>
+            <HamburgerNav />
           </div>
         </div>
       </nav>
@@ -204,7 +207,6 @@ export default function HomePage() {
                   [t('spec_material'), 'Nerđajući čelik'],
                   [t('spec_size'), '29 mm'],
                   [t('spec_coating'), 'Epoxy premaz'],
-                  [t('spec_option'), 'QR + NFC'],
                 ].map(([l,v]) => (
                   <div key={l} className="bg-white/5 border border-white/8 rounded-2xl p-4">
                     <div className="text-[10px] text-white/30 font-medium uppercase tracking-widest mb-1">{l}</div>
@@ -262,7 +264,7 @@ export default function HomePage() {
                 <div className="text-white/30 text-sm font-medium mt-1">plaćanje pouzećem</div>
               </div>
               <ul className="space-y-3 mb-7 text-sm font-medium text-white/60">
-                {['Doživotni profil ljubimca', 'QR + NFC privezak', 'Nerđajući čelik 29mm', 'Besplatna dostava'].map(item => (
+                {['Doživotni profil ljubimca', 'QR privezak od nerđajućeg čelika', 'Prečnik 29mm', 'Besplatna dostava'].map(item => (
                   <li key={item} className="flex gap-3 items-center">
                     <span className="w-5 h-5 rounded-full bg-teal/20 flex items-center justify-center flex-shrink-0">
                       <svg width="9" height="9" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 5.7L6.5 2.3" stroke="#19B6B2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -324,8 +326,10 @@ export default function HomePage() {
           <PetCodeLogo size="sm" showTagline />
           <div className="text-xs text-gray-400 font-medium">© 2025 PetCode · Srbija · info@pet-code.rs</div>
           <div className="flex items-center gap-5">
+            <Link href="/prodavnica" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">Prodavnica</Link>
+            <Link href="/o-nama" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">O nama</Link>
             <Link href="/login" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">{t('nav_login')}</Link>
-            <a href="mailto:info@pet-code.rs" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">Kontakt</a>
+            <Link href="/kontakt" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">Kontakt</Link>
           </div>
         </div>
       </footer>

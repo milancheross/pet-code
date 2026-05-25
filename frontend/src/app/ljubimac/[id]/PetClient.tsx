@@ -73,7 +73,7 @@ export default function PetClient({ pet: p, isNew }: { pet: PetFull; isNew: bool
             </a>
             <div className="w-24 h-24 rounded-full mx-auto mb-3 border-[3px] border-teal/30 overflow-hidden bg-teal/10 flex items-center justify-center text-5xl">
               {p.photo_url
-                ? <Image src={p.photo_url} alt={p.name} width={96} height={96} className="w-full h-full object-cover" />
+                ? <Image src={p.photo_url} alt={p.name} width={96} height={96} className="w-full h-full object-cover" unoptimized />
                 : emoji}
             </div>
             <h1 className="text-white text-2xl font-black tracking-tight mb-1">{p.name}</h1>

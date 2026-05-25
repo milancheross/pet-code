@@ -1,5 +1,6 @@
 'use client'
 import { useState, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useLang } from '@/lib/i18n/LangContext'
 import LangSwitcher from '@/components/LangSwitcher'
 import Link from 'next/link'
@@ -8,6 +9,10 @@ import { PRICE_PER_TAG } from '@/lib/types'
 
 function OrderForm() {
   const { t } = useLang()
+  const params = useSearchParams()
+  const productSlug = params?.get('product') || null
+  const variantId = params?.get('variant') || null
+
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
@@ -27,7 +32,7 @@ function OrderForm() {
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customer_name: name, customer_phone: phone, customer_email: email || null, address, city, quantity: 1, note: note || null, total_rsd: total }),
+        body: JSON.stringify({ customer_name: name, customer_phone: phone, customer_email: email || null, address, city, quantity: 1, note: note || null, total_rsd: total, product_slug: productSlug, variant_id: variantId }),
       })
       if (!res.ok) throw new Error()
       setSuccess(true)
@@ -51,12 +56,24 @@ function OrderForm() {
   return (
     <div className="min-h-screen bg-[#F4F7FA] pb-16">
       <nav className="bg-white border-b border-[#E2EAF0] px-5 py-3.5 flex items-center justify-between sticky top-0 z-10">
-        <PetCodeLogo size="sm" />
+        <Link href="/"><PetCodeLogo size="sm" /></Link>
         <LangSwitcher />
       </nav>
 
       <div className="max-w-md mx-auto p-4 pt-8">
         <h1 className="text-2xl font-extrabold text-navy mb-8 text-center">{t('order_title')}</h1>
+
+        {productSlug && (
+          <div className="bg-teal/10 border border-teal/20 rounded-2xl p-4 mb-5 flex items-center gap-3">
+            <span className="text-2xl">🛍️</span>
+            <div>
+              <div className="text-xs font-bold text-teal uppercase tracking-widest mb-0.5">Narudžbina proizvoda</div>
+              <div className="font-bold text-navy">
+                {productSlug.replace(/-[a-z0-9]{6,}$/, '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+              </div>
+            </div>
+          </div>
+        )}
 
         {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 mb-5 text-sm font-semibold">⚠️ {error}</div>}
 
