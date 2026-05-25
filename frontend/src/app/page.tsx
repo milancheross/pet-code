@@ -21,7 +21,7 @@ export default function HomePage() {
       {/* NAV */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#E2EAF0]">
         <div className="max-w-5xl mx-auto px-5 py-3.5 flex items-center justify-between">
-          <PetCodeLogo size="sm" />
+          <Link href="/"><PetCodeLogo size="sm" /></Link>
           <div className="hidden lg:flex items-center gap-7">
             <Link href="/prodavnica" className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">Prodavnica</Link>
             <Link href="/o-nama" className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">O nama</Link>

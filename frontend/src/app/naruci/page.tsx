@@ -56,7 +56,7 @@ function OrderForm() {
   return (
     <div className="min-h-screen bg-[#F4F7FA] pb-16">
       <nav className="bg-white border-b border-[#E2EAF0] px-5 py-3.5 flex items-center justify-between sticky top-0 z-10">
-        <PetCodeLogo size="sm" />
+        <Link href="/"><PetCodeLogo size="sm" /></Link>
         <LangSwitcher />
       </nav>
 
