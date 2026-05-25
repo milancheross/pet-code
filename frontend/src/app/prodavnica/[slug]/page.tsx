@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import PetCodeLogo from '@/components/PetCodeLogo'
 import HamburgerNav from '@/components/HamburgerNav'
+import ProductImageGallery from '@/components/ProductImageGallery'
 import { createAdminClient } from '@/lib/supabase/server'
 import { unstable_noStore as noStore } from 'next/cache'
 import { notFound } from 'next/navigation'
@@ -75,48 +76,14 @@ export default async function ProductPage({ params }: { params: { slug: string }
         </div>
 
         <div className="grid md:grid-cols-2 gap-10">
-          {/* Image gallery */}
-          <div className="space-y-3">
-            {/* Main image — natural aspect ratio, no cropping */}
-            <div className="relative bg-white rounded-3xl border border-[#E2EAF0] overflow-hidden shadow-[0_4px_24px_rgba(11,31,59,0.06)] flex items-center justify-center p-4" style={{ minHeight: '300px', maxHeight: '520px' }}>
-              {discountPct > 0 && (
-                <span className="absolute top-4 left-4 z-10 bg-red-500 text-white text-sm font-black px-3 py-1.5 rounded-full shadow">
-                  -{discountPct}% POPUST
-                </span>
-              )}
-              {product.is_new && (
-                <span className="absolute top-4 right-4 z-10 bg-teal text-white text-sm font-black px-3 py-1.5 rounded-full shadow">
-                  NOVO
-                </span>
-              )}
-              {!product.in_stock && (
-                <div className="absolute inset-0 z-20 bg-white/80 flex items-center justify-center rounded-3xl">
-                  <span className="bg-gray-700 text-white text-sm font-black px-4 py-2 rounded-full">RASPRODATO</span>
-                </div>
-              )}
-              {mainImg ? (
-                <img
-                  src={mainImg.url}
-                  alt={mainImg.alt || product.name}
-                  className="w-full h-auto object-contain"
-                  style={{ maxHeight: '480px' }}
-                />
-              ) : (
-                <div className="text-8xl py-12">🐾</div>
-              )}
-            </div>
-
-            {/* Thumbnail strip */}
-            {images.length > 1 && (
-              <div className="grid grid-cols-4 gap-2">
-                {images.slice(0, 8).map((img: any, i: number) => (
-                  <div key={i} className="bg-white rounded-2xl border border-[#E2EAF0] overflow-hidden flex items-center justify-center p-1.5" style={{ aspectRatio: '1' }}>
-                    <img src={img.url} alt={img.alt || product.name} className="w-full h-full object-contain" />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* Image gallery — interactive zoom + lightbox */}
+          <ProductImageGallery
+            images={images}
+            productName={product.name}
+            discountPct={discountPct}
+            isNew={product.is_new}
+            inStock={product.in_stock}
+          />
 
           {/* Product info */}
           <div>

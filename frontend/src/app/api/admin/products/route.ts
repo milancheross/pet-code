@@ -109,6 +109,11 @@ export async function DELETE(req: NextRequest) {
     revalidateShop()
     return NextResponse.json({ ok: true })
   }
+  if (action === 'delete_image') {
+    await sb.from('product_images').delete().eq('id', id)
+    revalidateShop()
+    return NextResponse.json({ ok: true })
+  }
 
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
 }

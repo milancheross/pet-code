@@ -29,6 +29,18 @@ export default function AdminPage() {
   const [imageUploading, setImageUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Edit product state
+  const [editProduct, setEditProduct] = useState<any>(null)
+  const [editForm, setEditForm] = useState<any>({})
+  const [editImages, setEditImages] = useState<any[]>([])
+  const [editDeletedImageIds, setEditDeletedImageIds] = useState<string[]>([])
+  const [editNewImages, setEditNewImages] = useState<{ url: string; preview: string }[]>([])
+  const [editVariants, setEditVariants] = useState<any[]>([])
+  const [editDeletedVariantIds, setEditDeletedVariantIds] = useState<string[]>([])
+  const [editNewVariants, setEditNewVariants] = useState<Array<{type:string,value:string,price_modifier_rsd:string}>>([])
+  const [editImageUploading, setEditImageUploading] = useState(false)
+  const editFileInputRef = useRef<HTMLInputElement>(null)
+
   // Pet modals
   const [petPreview, setPetPreview] = useState<any>(null)
   const [petEdit, setPetEdit] = useState<any>(null)
@@ -104,6 +116,96 @@ export default function AdminPage() {
     setUploadedImages(prev => [...prev, ...newImages])
     setImageUploading(false)
     if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const handleEditImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+    setEditImageUploading(true)
+    const newImgs: { url: string; preview: string }[] = []
+    for (const file of Array.from(files)) {
+      const preview = URL.createObjectURL(file)
+      try {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onloadend = () => resolve((reader.result as string).split(',')[1])
+          reader.onerror = reject
+          reader.readAsDataURL(file)
+        })
+        const ext = file.name.split('.').pop() || 'jpg'
+        const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+        const res = await adminFetchProducts({
+          action: 'upload_image',
+          payload: { product_id: editProduct?.id || 'temp', filename, base64, mime_type: file.type },
+        })
+        if (res.error) { console.error('Upload greška:', res.error); continue }
+        newImgs.push({ url: res.url, preview })
+      } catch (err) { console.error('Upload greška:', err) }
+    }
+    setEditNewImages(prev => [...prev, ...newImgs])
+    setEditImageUploading(false)
+    if (editFileInputRef.current) editFileInputRef.current.value = ''
+  }
+
+  const openEdit = (prod: any) => {
+    setEditProduct(prod)
+    setEditForm({
+      name: prod.name || '',
+      description: prod.description || '',
+      short_description: prod.short_description || '',
+      price_rsd: String(prod.price_rsd || ''),
+      compare_at_price_rsd: prod.compare_at_price_rsd ? String(prod.compare_at_price_rsd) : '',
+      category_id: prod.category_id || '',
+      is_active: prod.is_active !== false,
+      is_featured: !!prod.is_featured,
+      is_new: !!prod.is_new,
+      in_stock: prod.in_stock !== false,
+      sku: prod.sku || '',
+    })
+    const sorted = [...(prod.product_images || [])].sort((a: any, b: any) => a.sort_order - b.sort_order)
+    setEditImages(sorted)
+    setEditDeletedImageIds([])
+    setEditNewImages([])
+    setEditVariants([...(prod.product_variants || [])])
+    setEditDeletedVariantIds([])
+    setEditNewVariants([])
+    setShopModal('edit-product')
+  }
+
+  const saveEdit = async () => {
+    if (!editProduct || !editForm.name || !editForm.price_rsd) { alert('Unesite naziv i cenu'); return }
+    const payload: any = {
+      id: editProduct.id,
+      name: editForm.name,
+      description: editForm.description || null,
+      short_description: editForm.short_description || null,
+      price_rsd: parseFloat(editForm.price_rsd),
+      compare_at_price_rsd: editForm.compare_at_price_rsd ? parseFloat(editForm.compare_at_price_rsd) : null,
+      category_id: editForm.category_id || null,
+      is_active: editForm.is_active,
+      is_featured: editForm.is_featured,
+      is_new: editForm.is_new,
+      in_stock: editForm.in_stock,
+      sku: editForm.sku || null,
+    }
+    const res = await adminFetchProducts({ action: 'update_product', payload })
+    if (res.error) { alert('Greška: ' + res.error); return }
+    // Delete removed images
+    for (const id of editDeletedImageIds) await adminDeleteProduct({ action: 'delete_image', id })
+    // Upload & save new images
+    const keepCount = editImages.filter(img => !editDeletedImageIds.includes(img.id)).length
+    for (let i = 0; i < editNewImages.length; i++) {
+      await adminFetchProducts({ action: 'add_image', payload: { product_id: editProduct.id, url: editNewImages[i].url, sort_order: keepCount + i } })
+    }
+    // Delete removed variants
+    for (const id of editDeletedVariantIds) await adminDeleteProduct({ action: 'delete_variant', id })
+    // Add new variants
+    for (const v of editNewVariants) {
+      if (v.value) await adminFetchProducts({ action: 'add_variant', payload: { product_id: editProduct.id, name: v.value, type: v.type, value: v.value, price_modifier_rsd: parseFloat(v.price_modifier_rsd) || 0 } })
+    }
+    setEditProduct(null)
+    setShopModal('none')
+    await load()
   }
 
   const login = async () => {
@@ -574,6 +676,7 @@ export default function AdminPage() {
                             </div>
                           </div>
                           <div className="flex items-center gap-2 flex-shrink-0">
+                            <button onClick={() => openEdit(prod)} className="text-xs text-orange font-bold hover:underline">✏️ Uredi</button>
                             <button onClick={async () => {
                               await adminFetchProducts({ action: 'update_product', payload: { id: prod.id, is_active: !prod.is_active } })
                               await load()
@@ -583,7 +686,7 @@ export default function AdminPage() {
                               const r = await adminDeleteProduct({ action: 'delete_product', id: prod.id })
                               if (r.error) { alert('Greška: ' + r.error); return }
                               await load()
-                            }} className="text-xs text-red-400 font-bold hover:text-red-600">🗑️ Obriši</button>
+                            }} className="text-xs text-red-400 font-bold hover:text-red-600">🗑️</button>
                           </div>
                         </div>
                       )
@@ -763,6 +866,169 @@ export default function AdminPage() {
                   </div>
                 </div>
               </div>
+              )
+            })()}
+
+            {/* ── Edit product modal ── */}
+            {shopModal === 'edit-product' && editProduct && (() => {
+              const discPct = editForm.compare_at_price_rsd && editForm.price_rsd
+                && parseFloat(editForm.compare_at_price_rsd) > parseFloat(editForm.price_rsd)
+                ? Math.round(((parseFloat(editForm.compare_at_price_rsd) - parseFloat(editForm.price_rsd)) / parseFloat(editForm.compare_at_price_rsd)) * 100)
+                : 0
+              const visibleImages = editImages.filter((img: any) => !editDeletedImageIds.includes(img.id))
+              return (
+                <div className="fixed inset-0 bg-navy/50 z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={() => setShopModal('none')}>
+                  <div className="bg-white rounded-3xl p-6 w-full max-w-lg my-4" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-black text-navy text-lg">✏️ Uredi proizvod</h3>
+                      <button onClick={() => setShopModal('none')} className="text-gray-400 hover:text-navy font-bold text-xl">✕</button>
+                    </div>
+                    <div className="space-y-3 max-h-[65vh] overflow-y-auto pr-1">
+
+                      {/* Naziv */}
+                      <div><label className="label">Naziv *</label><input className="input" value={editForm.name} onChange={e => setEditForm((p: any) => ({...p, name: e.target.value}))} /></div>
+
+                      {/* Opisi */}
+                      <div><label className="label">Kratki opis</label><input className="input" value={editForm.short_description} onChange={e => setEditForm((p: any) => ({...p, short_description: e.target.value}))} placeholder="Za karticu u prodavnici" /></div>
+                      <div><label className="label">Pun opis</label><textarea className="input resize-none h-20" value={editForm.description} onChange={e => setEditForm((p: any) => ({...p, description: e.target.value}))} /></div>
+
+                      {/* Cene */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="label">Cena (RSD) *</label>
+                          <input className="input" type="number" value={editForm.price_rsd} onChange={e => setEditForm((p: any) => ({...p, price_rsd: e.target.value}))} />
+                        </div>
+                        <div>
+                          <label className="label">
+                            Stara cena (RSD)
+                            {discPct > 0 && <span className="ml-1 text-red-500 font-black">-{discPct}%</span>}
+                          </label>
+                          <input className="input" type="number" value={editForm.compare_at_price_rsd} onChange={e => setEditForm((p: any) => ({...p, compare_at_price_rsd: e.target.value}))} placeholder="Opcionalno" />
+                        </div>
+                      </div>
+
+                      {/* SKU + Kategorija */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="label">SKU / Šifra</label>
+                          <input className="input" value={editForm.sku} onChange={e => setEditForm((p: any) => ({...p, sku: e.target.value}))} placeholder="PC-001" />
+                        </div>
+                        <div>
+                          <label className="label">Kategorija</label>
+                          <select className="input" value={editForm.category_id} onChange={e => setEditForm((p: any) => ({...p, category_id: e.target.value}))}>
+                            <option value="">— bez —</option>
+                            {shopCategories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Status checkboxes */}
+                      <div className="bg-[#F4F7FA] rounded-2xl p-3 grid grid-cols-2 gap-2">
+                        {[
+                          { key: 'is_active',   label: '✅ Aktivan (vidljiv)' },
+                          { key: 'in_stock',    label: '📦 Na stanju' },
+                          { key: 'is_featured', label: '⭐ Istaknuti proizvod' },
+                          { key: 'is_new',      label: '🆕 Označi kao NOVO' },
+                        ].map(({ key, label }) => (
+                          <label key={key} className="flex items-center gap-2 text-sm font-semibold text-gray-600 cursor-pointer">
+                            <input type="checkbox" checked={editForm[key]} onChange={e => setEditForm((p: any) => ({...p, [key]: e.target.checked}))} className="w-4 h-4 accent-teal" />
+                            {label}
+                          </label>
+                        ))}
+                      </div>
+
+                      {/* Varijacije — existing */}
+                      <div>
+                        <label className="label">Varijacije</label>
+                        {editVariants.filter((v: any) => !editDeletedVariantIds.includes(v.id)).map((v: any) => (
+                          <div key={v.id} className="flex items-center gap-2 mb-2 bg-[#F4F7FA] rounded-xl px-3 py-2">
+                            <span className="text-xs font-bold text-gray-400 uppercase w-16">{v.type}</span>
+                            <span className="font-semibold text-navy text-sm flex-1">{v.value}</span>
+                            {Number(v.price_modifier_rsd) !== 0 && (
+                              <span className="text-xs text-gray-400">{v.price_modifier_rsd > 0 ? '+' : ''}{v.price_modifier_rsd} RSD</span>
+                            )}
+                            <button onClick={() => setEditDeletedVariantIds(p => [...p, v.id])} className="text-red-400 font-bold text-sm hover:text-red-600 ml-1">✕</button>
+                          </div>
+                        ))}
+                        {/* New variants to add */}
+                        {editNewVariants.map((v, i) => (
+                          <div key={i} className="flex gap-2 mb-2 items-center">
+                            <select className="input text-sm flex-1" value={v.type} onChange={e => setEditNewVariants(p => p.map((x, j) => j === i ? {...x, type: e.target.value} : x))}>
+                              <option value="color">Boja</option>
+                              <option value="size">Veličina</option>
+                              <option value="material">Materijal</option>
+                            </select>
+                            <input className="input text-sm flex-1" placeholder="vrednost" value={v.value} onChange={e => setEditNewVariants(p => p.map((x, j) => j === i ? {...x, value: e.target.value} : x))} />
+                            <input className="input text-sm w-24" placeholder="+/- RSD" value={v.price_modifier_rsd} onChange={e => setEditNewVariants(p => p.map((x, j) => j === i ? {...x, price_modifier_rsd: e.target.value} : x))} />
+                            <button onClick={() => setEditNewVariants(p => p.filter((_, j) => j !== i))} className="text-red-400 font-bold text-sm hover:text-red-600">✕</button>
+                          </div>
+                        ))}
+                        <button onClick={() => setEditNewVariants(p => [...p, { type: 'color', value: '', price_modifier_rsd: '0' }])} className="text-sm text-teal font-bold hover:underline">+ Dodaj varijaciju</button>
+                      </div>
+
+                      {/* Slike */}
+                      <div>
+                        <label className="label">Slike proizvoda</label>
+                        <input ref={editFileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleEditImageUpload} />
+
+                        {/* Existing images */}
+                        {visibleImages.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mb-2">
+                            {visibleImages.map((img: any) => (
+                              <div key={img.id} className="relative w-20 h-20 rounded-2xl overflow-hidden border border-[#E2EAF0] group flex-shrink-0 bg-[#F4F7FA]">
+                                <img src={img.url} alt="" className="w-full h-full object-contain p-1" />
+                                <button
+                                  type="button"
+                                  onClick={() => setEditDeletedImageIds(p => [...p, img.id])}
+                                  className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity leading-none"
+                                >✕</button>
+                                <div className="absolute bottom-0 left-0 right-0 bg-teal/70 text-white text-[8px] text-center py-0.5 font-medium">postoji</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* New uploads */}
+                        {editNewImages.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mb-2">
+                            {editNewImages.map((img, i) => (
+                              <div key={i} className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-teal group flex-shrink-0 bg-[#F4F7FA]">
+                                <img src={img.preview} alt="" className="w-full h-full object-contain p-1" />
+                                <button
+                                  type="button"
+                                  onClick={() => setEditNewImages(p => p.filter((_, j) => j !== i))}
+                                  className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity leading-none"
+                                >✕</button>
+                                <div className="absolute bottom-0 left-0 right-0 bg-orange/70 text-white text-[8px] text-center py-0.5 font-medium">nova</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        <button
+                          type="button"
+                          disabled={editImageUploading}
+                          onClick={() => editFileInputRef.current?.click()}
+                          className="flex items-center gap-2 px-4 py-3 rounded-2xl border-2 border-dashed border-[#E2EAF0] text-sm font-semibold text-gray-400 hover:border-teal hover:text-teal transition-colors disabled:opacity-50 w-full justify-center"
+                        >
+                          {editImageUploading
+                            ? <><svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Uploadujem...</>
+                            : <>📷 Dodaj slike</>}
+                        </button>
+                        {editDeletedImageIds.length > 0 && (
+                          <p className="text-[11px] text-red-400 font-semibold mt-1.5 text-center">
+                            {editDeletedImageIds.length} slika označeno za brisanje
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 mt-5">
+                      <button onClick={saveEdit} className="btn-primary flex-1">💾 Sačuvaj izmene</button>
+                      <button onClick={() => setShopModal('none')} className="btn-outline flex-1">Otkaži</button>
+                    </div>
+                  </div>
+                </div>
               )
             })()}
           </div>
