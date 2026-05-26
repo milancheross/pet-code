@@ -78,7 +78,7 @@ export default function ONamaPage() {
           <div className="text-white/40 text-xs font-bold uppercase tracking-widest mb-5">Kontaktirajte nas</div>
           <div className="grid sm:grid-cols-3 gap-4">
             {[
-              { label: 'Email', value: 'info@pet-code.rs', href: 'mailto:info@pet-code.rs' },
+              { label: 'Email', value: 'petcodeoffice@gmail.com', href: 'mailto:petcodeoffice@gmail.com' },
               { label: 'Adresa', value: 'Stevana Čolovića 53, Arilje', href: null },
               { label: 'Radno vreme', value: 'Pon–Pet 09–17h', href: null },
             ].map(c => (
@@ -97,7 +97,7 @@ export default function ONamaPage() {
       <footer className="border-t border-[#E2EAF0] py-8 px-4 bg-white mt-8">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <PetCodeLogo size="sm" showTagline />
-          <div className="text-xs text-gray-400 font-medium">© 2025 PetCode · Srbija · info@pet-code.rs</div>
+          <div className="text-xs text-gray-400 font-medium">© 2025 PetCode · Srbija · petcodeoffice@gmail.com</div>
           <div className="flex items-center gap-5">
             <Link href="/" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">Početna</Link>
             <Link href="/prodavnica" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">Prodavnica</Link>

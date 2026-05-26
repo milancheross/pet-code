@@ -71,8 +71,8 @@ export default function KontaktPage() {
                 </div>
                 <div>
                   <div className="label mb-1">Email</div>
-                  <a href="mailto:info@pet-code.rs" className="font-bold text-navy hover:text-teal transition-colors">
-                    info@pet-code.rs
+                  <a href="mailto:petcodeoffice@gmail.com" className="font-bold text-navy hover:text-teal transition-colors">
+                    petcodeoffice@gmail.com
                   </a>
                 </div>
               </div>
@@ -110,7 +110,7 @@ export default function KontaktPage() {
       <footer className="border-t border-[#E2EAF0] py-8 px-4 bg-white mt-8">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <PetCodeLogo size="sm" showTagline />
-          <div className="text-xs text-gray-400 font-medium">© 2025 PetCode · Srbija · info@pet-code.rs</div>
+          <div className="text-xs text-gray-400 font-medium">© 2025 PetCode · Srbija · petcodeoffice@gmail.com</div>
           <div className="flex items-center gap-5">
             <Link href="/" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">Početna</Link>
             <Link href="/naruci" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">Naruči</Link>

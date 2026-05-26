@@ -324,7 +324,7 @@ export default function HomePage() {
       <footer className="border-t border-[#E2EAF0] py-10 px-4 bg-white">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-5">
           <PetCodeLogo size="sm" showTagline />
-          <div className="text-xs text-gray-400 font-medium">© 2025 PetCode · Srbija · info@pet-code.rs</div>
+          <div className="text-xs text-gray-400 font-medium">© 2025 PetCode · Srbija · petcodeoffice@gmail.com</div>
           <div className="flex items-center gap-5">
             <Link href="/prodavnica" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">Prodavnica</Link>
             <Link href="/o-nama" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">O nama</Link>
