@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: 'PetCode.rs — QR identifikacija ljubimaca',
   description: 'Skeniranjem QR koda na privetku dobijate sve podatke o ljubimcu i kontakt vlasnika.',
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://pet-code.rs'),
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

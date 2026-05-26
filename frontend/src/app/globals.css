@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Global mobile safety ─────────────────────────────────────────── */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  box-sizing: border-box;
+}
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Hide floating hero badges on very small screens */
+@media (max-width: 480px) {
+  .float-badge { display: none !important; }
+}
+
 @layer components {
   .btn-primary {
     @apply bg-orange text-white font-bold rounded-full px-6 py-3

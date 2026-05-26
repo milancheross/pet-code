@@ -16,19 +16,26 @@ export default function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
   return (
-    <div className="min-h-screen bg-[#F4F7FA]">
+    <div className="min-h-screen bg-[#F4F7FA]" style={{ overflowX: 'hidden', maxWidth: '100vw' }}>
 
-      {/* NAV */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#E2EAF0]">
-        <div className="max-w-5xl mx-auto px-5 py-3.5 flex items-center justify-between">
+      {/* ── NAV ─────────────────────────────────────────────────────── */}
+      <nav
+        className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#E2EAF0]"
+        style={{ height: 64 }}
+      >
+        <div className="max-w-5xl mx-auto px-4 h-full flex items-center justify-between">
           <Link href="/"><PetCodeLogo size="sm" /></Link>
+
+          {/* Desktop links */}
           <div className="hidden lg:flex items-center gap-7">
             <Link href="/prodavnica" className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">Prodavnica</Link>
-            <Link href="/o-nama" className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">O nama</Link>
-            <Link href="/kontakt" className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">Kontakt</Link>
-            <Link href="/login" className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">{t('nav_login')}</Link>
+            <Link href="/o-nama"     className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">O nama</Link>
+            <Link href="/kontakt"    className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">Kontakt</Link>
+            <Link href="/login"      className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">{t('nav_login')}</Link>
           </div>
-          <div className="flex items-center gap-3">
+
+          {/* Right side: lang + order btn + hamburger */}
+          <div className="flex items-center" style={{ gap: 12 }}>
             <LangSwitcher />
             <Link href="/naruci" className="hidden sm:block btn-primary text-sm px-5 py-2.5">{t('nav_order')}</Link>
             <HamburgerNav />
@@ -36,35 +43,146 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* HERO */}
-      <section className="pt-32 pb-24 px-4 max-w-5xl mx-auto relative overflow-hidden">
-        {/* Subtle background glow */}
-        <div className="absolute inset-0 pointer-events-none" aria-hidden>
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full"
+      {/* ── HERO ────────────────────────────────────────────────────── */}
+      <section
+        className="px-4 max-w-5xl mx-auto relative"
+        style={{ paddingTop: 100, paddingBottom: 64, overflowX: 'visible' }}
+      >
+        {/* Background glows */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden style={{ overflow: 'hidden' }}>
+          <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full"
             style={{ background: 'radial-gradient(circle, rgba(25,182,178,0.07) 0%, transparent 70%)' }} />
-          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full"
+          <div className="absolute bottom-0 left-0 w-[300px] h-[300px] rounded-full"
             style={{ background: 'radial-gradient(circle, rgba(11,31,59,0.04) 0%, transparent 70%)' }} />
         </div>
 
-        <div className="relative grid md:grid-cols-2 gap-14 items-center">
-          <div>
-            <div className="inline-flex items-center gap-2 bg-teal/10 text-teal text-xs font-bold px-4 py-2 rounded-full mb-7 uppercase tracking-widest">
+        {/* On mobile: flex-col (mockup first, text second) | md+: 2-column grid */}
+        <div className="relative flex flex-col md:grid md:grid-cols-2 gap-8 md:gap-14 items-center">
+
+          {/* Phone mockup — order-first on mobile, order-last on desktop */}
+          <div className="order-first md:order-last flex justify-center w-full">
+            <div style={{ position: 'relative', maxWidth: 260, width: '100%', margin: '0 auto' }}>
+              {/* Phone shell */}
+              <div
+                className="mx-auto shadow-[0_32px_64px_rgba(11,31,59,0.25)]"
+                style={{
+                  width: 200,
+                  height: 420,
+                  background: '#0B1F3B',
+                  borderRadius: 34,
+                  padding: 10,
+                }}
+              >
+                <div style={{
+                  width: '100%',
+                  height: '100%',
+                  background: '#fff',
+                  borderRadius: 26,
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}>
+                  {/* Pet header */}
+                  <div style={{ background: '#0B1F3B', padding: '18px 14px 14px', textAlign: 'center' }}>
+                    <div style={{
+                      width: 52, height: 52, borderRadius: '50%',
+                      background: 'rgba(25,182,178,0.2)',
+                      border: '2px solid rgba(25,182,178,0.3)',
+                      margin: '0 auto 8px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 26,
+                    }}>🐕</div>
+                    <div style={{ color: '#fff', fontWeight: 800, fontSize: 16, letterSpacing: '-0.3px' }}>Maks</div>
+                    <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, fontWeight: 500, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Labrador · 3 godine</div>
+                  </div>
+
+                  {/* Call / SMS */}
+                  <div style={{ padding: '10px 10px 0', display: 'flex', gap: 8 }}>
+                    <div style={{ flex: 1, background: '#19B6B2', borderRadius: 12, padding: '9px 0', textAlign: 'center', color: '#fff', fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>📞 Pozovi</div>
+                    <div style={{ flex: 1, background: '#0B1F3B', borderRadius: 12, padding: '9px 0', textAlign: 'center', color: '#fff', fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>💬 SMS</div>
+                  </div>
+
+                  {/* Info rows */}
+                  <div style={{ padding: '0 12px', flex: 1 }}>
+                    {[['Vlasnik','Marko P.'],['Telefon','+381 64 ···'],['Alergije','⚠️ Piletina'],['Mikročip','✅ Da']].map(([l,v]) => (
+                      <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f0f0f0' }}>
+                        <span style={{ color: '#9ca3af', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{l}</span>
+                        <span style={{ color: '#0B1F3B', fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap' }}>{v}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ padding: '10px 0', textAlign: 'center', fontSize: 9, color: '#d1d5db', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase' }}>pet-code.rs</div>
+                </div>
+              </div>
+
+              {/* Floating badges — hidden on ≤480px via .float-badge CSS class */}
+              <div
+                className="float-badge"
+                style={{
+                  position: 'absolute',
+                  right: -8,
+                  top: 60,
+                  background: '#fff',
+                  borderRadius: 14,
+                  boxShadow: '0 8px 24px rgba(11,31,59,0.12)',
+                  padding: '9px 13px',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: '#0B1F3B',
+                  border: '1px solid #E2EAF0',
+                  whiteSpace: 'nowrap',
+                  animation: 'bounce 3s infinite',
+                }}
+              >
+                <span style={{ width: 7, height: 7, background: '#4ade80', borderRadius: '50%', display: 'inline-block', marginRight: 6 }} />
+                QR skeniran
+              </div>
+              <div
+                className="float-badge"
+                style={{
+                  position: 'absolute',
+                  left: -8,
+                  bottom: 80,
+                  background: '#FF6B4A',
+                  borderRadius: 14,
+                  boxShadow: '0 8px 24px rgba(255,107,74,0.35)',
+                  padding: '9px 13px',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: '#fff',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                🐾 Maks pronađen!
+              </div>
+            </div>
+          </div>
+
+          {/* Text content — order-last on mobile (below mockup), order-first on desktop */}
+          <div className="order-last md:order-first text-center md:text-left">
+            <div className="inline-flex items-center gap-2 bg-teal/10 text-teal text-xs font-bold px-4 py-2 rounded-full mb-5 uppercase tracking-widest">
               <span className="w-2 h-2 bg-teal rounded-full animate-pulse" />
               Srbija · QR identifikacija
             </div>
-            <h1 className="text-[2.7rem] md:text-[3.2rem] font-extrabold text-navy leading-[1.08] tracking-tight mb-5">
+            <h1
+              className="font-extrabold text-navy leading-[1.08] tracking-tight mb-4"
+              style={{ fontSize: 'clamp(28px, 8vw, 52px)' }}
+            >
               {t('hero_title').replace('pronađen.', '')}
               <span className="text-teal">pronađen.</span>
             </h1>
-            <p className="text-lg text-gray-500 leading-relaxed mb-9 font-medium max-w-md">{t('hero_sub')}</p>
-            <div className="flex gap-3 flex-wrap">
+            <p className="text-base md:text-lg text-gray-500 leading-relaxed mb-7 font-medium max-w-md mx-auto md:mx-0">
+              {t('hero_sub')}
+            </p>
+            <div className="flex gap-3 flex-wrap justify-center md:justify-start">
               <Link href="/naruci" className="btn-primary">{t('hero_cta')}</Link>
               <a href="#kako" className="btn-outline">{t('hero_cta2')}</a>
             </div>
-            <div className="flex flex-wrap gap-5 mt-9">
+            <div className="flex flex-wrap gap-4 mt-7 justify-center md:justify-start">
               {(['trust_steel','trust_noapp','trust_delivery','trust_cod'] as const).map(k => (
                 <div key={k} className="flex items-center gap-2 text-sm font-semibold text-gray-400">
-                  <span className="w-4 h-4 rounded-full bg-teal/15 flex items-center justify-center">
+                  <span className="w-4 h-4 rounded-full bg-teal/15 flex items-center justify-center flex-shrink-0">
                     <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 5.7L6.5 2.3" stroke="#19B6B2" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </span>
                   {t(k)}
@@ -73,53 +191,19 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Phone mockup */}
-          <div className="flex justify-center">
-            <div className="relative">
-              <div className="w-56 h-[470px] bg-navy rounded-[38px] p-3 shadow-[0_40px_80px_rgba(11,31,59,0.28)]">
-                <div className="w-full h-full bg-white rounded-[28px] overflow-hidden flex flex-col">
-                  <div className="bg-[#0B1F3B] py-5 px-4 text-center">
-                    <div className="w-16 h-16 rounded-full bg-teal/20 mx-auto mb-2 flex items-center justify-center text-3xl border-2 border-teal/30">🐕</div>
-                    <div className="text-white font-extrabold text-lg tracking-tight">Maks</div>
-                    <div className="text-white/35 text-[10px] font-medium tracking-wider mt-0.5">Labrador · 3 godine</div>
-                  </div>
-                  <div className="p-3 flex gap-2">
-                    <div className="flex-1 bg-teal rounded-xl py-2.5 text-white text-xs font-bold text-center shadow-[0_2px_8px_rgba(25,182,178,0.3)]">📞 Pozovi</div>
-                    <div className="flex-1 bg-navy rounded-xl py-2.5 text-white text-xs font-bold text-center">💬 SMS</div>
-                  </div>
-                  <div className="px-4 flex-1">
-                    {[['Vlasnik','Marko P.'],['Telefon','+381 64 ···'],['Alergije','⚠️ Piletina'],['Mikročip','✅ Da']].map(([l,v]) => (
-                      <div key={l} className="flex justify-between py-2.5 border-b border-gray-100 text-[11px]">
-                        <span className="text-gray-400 font-medium">{l}</span>
-                        <span className="text-navy font-bold">{v}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="p-3 text-center text-[9px] text-gray-300 font-medium tracking-widest uppercase">pet-code.rs</div>
-                </div>
-              </div>
-              {/* Floating badges */}
-              <div className="absolute -right-10 top-20 bg-white rounded-2xl shadow-[0_8px_24px_rgba(11,31,59,0.12)] px-3.5 py-2.5 text-xs font-bold text-navy border border-[#E2EAF0] whitespace-nowrap animate-bounce" style={{animationDuration:'3s'}}>
-                <span className="w-2 h-2 bg-green-400 rounded-full inline-block mr-1.5" />QR skeniran
-              </div>
-              <div className="absolute -left-12 bottom-28 bg-orange rounded-2xl shadow-[0_8px_24px_rgba(255,107,74,0.35)] px-3.5 py-2.5 text-xs font-bold text-white whitespace-nowrap">
-                🐾 Maks pronađen!
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
-      {/* PROMISE — "Naše obećanje" */}
-      <section className="py-20 px-4 bg-white border-y border-[#E2EAF0]">
+      {/* ── PROMISE ─────────────────────────────────────────────────── */}
+      <section className="py-16 md:py-20 px-4 bg-white border-y border-[#E2EAF0]">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-4">
-            <p className="text-2xl md:text-3xl font-extrabold text-navy tracking-tight">
+            <p className="text-xl md:text-3xl font-extrabold text-navy tracking-tight">
               Skeniraj me. <span className="text-teal">Imam svoj dom.</span> <span className="text-orange">♥</span>
             </p>
             <p className="text-gray-400 font-medium mt-2 text-sm tracking-wide">Jednostavno. Brzo. Pouzdano.</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-5 mt-12">
+          <div className="grid sm:grid-cols-3 gap-4 mt-10">
             {[
               {
                 icon: (
@@ -146,7 +230,7 @@ export default function HomePage() {
                 accent: 'navy',
               },
             ].map(({ icon, title, desc, accent }) => (
-              <div key={title} className="flex gap-4 p-6 rounded-3xl border border-[#E2EAF0] hover:-translate-y-1 transition-transform">
+              <div key={title} className="flex gap-4 p-5 rounded-3xl border border-[#E2EAF0] hover:-translate-y-1 transition-transform">
                 <div className={`w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 ${
                   accent === 'teal' ? 'bg-teal/10' : accent === 'orange' ? 'bg-orange/10' : 'bg-navy/6'
                 }`}>
@@ -162,14 +246,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
-      <section id="kako" className="py-20 px-4">
+      {/* ── HOW IT WORKS ────────────────────────────────────────────── */}
+      <section id="kako" className="py-16 md:py-20 px-4">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
+          <div className="text-center mb-10 md:mb-14">
             <div className="section-label mb-3">// {t('nav_how')}</div>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-navy tracking-tight">{t('how_title')}</h2>
+            <h2 className="text-2xl md:text-4xl font-extrabold text-navy tracking-tight">{t('how_title')}</h2>
           </div>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-3 gap-5">
             {[
               { n:'01', icon:(
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" rx="1.5" stroke="#19B6B2" strokeWidth="1.8"/><rect x="13" y="3" width="8" height="8" rx="1.5" stroke="#19B6B2" strokeWidth="1.8"/><rect x="3" y="13" width="8" height="8" rx="1.5" stroke="#19B6B2" strokeWidth="1.8"/><rect x="5" y="5" width="4" height="4" rx="0.5" fill="#19B6B2"/><rect x="15" y="5" width="4" height="4" rx="0.5" fill="#19B6B2"/><rect x="5" y="15" width="4" height="4" rx="0.5" fill="#19B6B2"/><path d="M13 13h2v2h-2zM17 13h4M17 17h4M15 21h2M19 19v2" stroke="#19B6B2" strokeWidth="1.6" strokeLinecap="round"/></svg>
@@ -181,9 +265,9 @@ export default function HomePage() {
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 22s-7-5.5-7-10a7 7 0 0114 0c0 4.5-7 10-7 10Z" stroke="#19B6B2" strokeWidth="1.8" strokeLinejoin="round"/><circle cx="12" cy="12" r="2.5" stroke="#19B6B2" strokeWidth="1.6"/></svg>
               ), t: t('how_s3_t'), d: t('how_s3') },
             ].map(s => (
-              <div key={s.n} className="relative bg-white border border-[#E2EAF0] rounded-3xl p-7 hover:-translate-y-1.5 hover:shadow-[0_12px_32px_rgba(11,31,59,0.08)] transition-all">
-                <div className="absolute top-5 right-6 text-5xl font-extrabold text-teal/8 select-none">{s.n}</div>
-                <div className="w-12 h-12 rounded-2xl bg-teal/10 flex items-center justify-center mb-5">{s.icon}</div>
+              <div key={s.n} className="relative bg-white border border-[#E2EAF0] rounded-3xl p-6 hover:-translate-y-1.5 hover:shadow-[0_12px_32px_rgba(11,31,59,0.08)] transition-all">
+                <div className="absolute top-5 right-5 text-5xl font-extrabold text-teal/8 select-none">{s.n}</div>
+                <div className="w-12 h-12 rounded-2xl bg-teal/10 flex items-center justify-center mb-4">{s.icon}</div>
                 <h3 className="font-bold text-navy mb-2 text-[15px]">{s.t}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed font-medium">{s.d}</p>
               </div>
@@ -192,14 +276,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* PRODUCT SPECS */}
-      <section className="py-20 px-4">
+      {/* ── PRODUCT SPECS ───────────────────────────────────────────── */}
+      <section className="py-16 md:py-20 px-4">
         <div className="max-w-5xl mx-auto">
-          <div className="bg-navy rounded-[32px] p-8 md:p-12 grid md:grid-cols-2 gap-12 items-center">
+          <div className="bg-navy rounded-[28px] md:rounded-[32px] p-6 md:p-12 grid md:grid-cols-2 gap-8 md:gap-12 items-center">
             <div>
               <div className="section-label text-teal mb-3">// privezak</div>
-              <h2 className="text-3xl font-extrabold text-white mb-4 tracking-tight">{t('spec_title')}</h2>
-              <p className="text-white/45 leading-relaxed mb-8 font-medium">
+              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-4 tracking-tight">{t('spec_title')}</h2>
+              <p className="text-white/45 leading-relaxed mb-6 font-medium text-sm md:text-base">
                 Nerđajući čelik sa epoksi zaštitom. QR kod ostaje čitljiv godinama — kiša, blato, igra u parku.
               </p>
               <div className="grid grid-cols-2 gap-3">
@@ -215,17 +299,16 @@ export default function HomePage() {
                 ))}
               </div>
             </div>
+
+            {/* Tag illustration */}
             <div className="flex justify-center">
-              <div className="relative w-52 h-52 flex items-center justify-center">
-                {/* Outer ring */}
+              <div className="relative flex items-center justify-center" style={{ width: 180, height: 180 }}>
                 <div className="absolute inset-0 rounded-full border border-white/8" />
-                {/* Spinning dashed ring */}
-                <div className="absolute w-64 h-64 rounded-full border border-dashed border-teal/20 animate-spin" style={{animationDuration:'25s'}} />
-                {/* Inner circle */}
-                <div className="w-36 h-36 rounded-full bg-white/5 border border-white/10 flex flex-col items-center justify-center gap-3">
-                  {/* Mini tag render */}
-                  <div className="w-16 h-16 rounded-full bg-[#0B1F3B] border-2 border-teal/40 flex items-center justify-center shadow-[0_4px_16px_rgba(25,182,178,0.2)]">
-                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                <div className="absolute rounded-full border border-dashed border-teal/20 animate-spin"
+                  style={{ width: 220, height: 220, animationDuration: '25s' }} />
+                <div className="w-28 h-28 rounded-full bg-white/5 border border-white/10 flex flex-col items-center justify-center gap-3">
+                  <div className="w-14 h-14 rounded-full bg-[#0B1F3B] border-2 border-teal/40 flex items-center justify-center shadow-[0_4px_16px_rgba(25,182,178,0.2)]">
+                    <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
                       <rect x="4" y="4" width="8" height="8" rx="1.5" stroke="#19B6B2" strokeWidth="1.5"/>
                       <rect x="16" y="4" width="8" height="8" rx="1.5" stroke="#19B6B2" strokeWidth="1.5"/>
                       <rect x="4" y="16" width="8" height="8" rx="1.5" stroke="#19B6B2" strokeWidth="1.5"/>
@@ -235,7 +318,7 @@ export default function HomePage() {
                       <path d="M16 16h3M21 16h3M16 20h3M16 23h6M22 20v6" stroke="#19B6B2" strokeWidth="1.4" strokeLinecap="round"/>
                     </svg>
                   </div>
-                  <span className="text-white/25 text-[9px] font-medium tracking-widest uppercase">pet-code.rs</span>
+                  <span className="text-white/25 text-[8px] font-medium tracking-widest uppercase">pet-code.rs</span>
                 </div>
               </div>
             </div>
@@ -243,23 +326,23 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* PRICING */}
-      <section id="cena" className="py-20 px-4 bg-white border-y border-[#E2EAF0]">
+      {/* ── PRICING ─────────────────────────────────────────────────── */}
+      <section id="cena" className="py-16 md:py-20 px-4 bg-white border-y border-[#E2EAF0]">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
+          <div className="text-center mb-10 md:mb-14">
             <div className="section-label mb-3">// cena</div>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-navy tracking-tight">{t('price_title')}</h2>
+            <h2 className="text-2xl md:text-4xl font-extrabold text-navy tracking-tight">{t('price_title')}</h2>
           </div>
           <div className="max-w-sm mx-auto">
-            <div className="bg-navy rounded-3xl p-8 border-2 border-navy shadow-[0_20px_50px_rgba(11,31,59,0.22)] relative">
+            <div className="bg-navy rounded-3xl p-7 md:p-8 border-2 border-navy shadow-[0_20px_50px_rgba(11,31,59,0.22)] relative">
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-orange text-white text-[10px] font-bold px-4 py-1 rounded-full uppercase tracking-widest shadow-[0_4px_12px_rgba(255,107,74,0.4)] whitespace-nowrap">
                 1 privezak
               </div>
               <div className="text-center mb-6 pt-2">
                 <div className="text-white/40 text-xs font-bold uppercase tracking-widest mb-3">Cena po privetku</div>
-                <div className="text-5xl font-extrabold text-white tracking-tight">
+                <div className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">
                   {PRICE_PER_TAG.toLocaleString()}
-                  <span className="text-2xl font-semibold ml-2">RSD</span>
+                  <span className="text-xl md:text-2xl font-semibold ml-2">RSD</span>
                 </div>
                 <div className="text-white/30 text-sm font-medium mt-1">plaćanje pouzećem</div>
               </div>
@@ -281,20 +364,20 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-20 px-4">
+      {/* ── FAQ ─────────────────────────────────────────────────────── */}
+      <section className="py-16 md:py-20 px-4">
         <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-10">
+          <div className="text-center mb-8 md:mb-10">
             <div className="section-label mb-3">// {t('faq_title')}</div>
-            <h2 className="text-3xl font-extrabold text-navy tracking-tight">{t('faq_title')}</h2>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-navy tracking-tight">{t('faq_title')}</h2>
           </div>
           <div className="space-y-3">
             {FAQ_KEYS.map(([q, a], i) => (
               <div key={i} className="bg-white rounded-2xl border border-[#E2EAF0] overflow-hidden hover:border-teal/30 transition-colors">
                 <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
                   className="w-full flex justify-between items-center p-5 text-left font-bold text-navy text-sm">
-                  {t(q)}
-                  <span className={`w-6 h-6 rounded-full bg-teal/10 flex items-center justify-center flex-shrink-0 ml-4 transition-transform ${openFaq === i ? 'rotate-180' : ''}`}>
+                  <span className="pr-3">{t(q)}</span>
+                  <span className={`w-6 h-6 rounded-full bg-teal/10 flex items-center justify-center flex-shrink-0 transition-transform ${openFaq === i ? 'rotate-180' : ''}`}>
                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5L8 3.5" stroke="#19B6B2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </span>
                 </button>
@@ -307,29 +390,29 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA BANNER */}
-      <section className="py-16 px-4">
-        <div className="max-w-3xl mx-auto bg-navy rounded-[32px] p-10 text-center shadow-[0_24px_60px_rgba(11,31,59,0.2)]">
-          <div className="text-3xl font-extrabold text-white mb-3 tracking-tight">
+      {/* ── CTA BANNER ──────────────────────────────────────────────── */}
+      <section className="py-12 md:py-16 px-4">
+        <div className="max-w-3xl mx-auto bg-navy rounded-[28px] md:rounded-[32px] p-8 md:p-10 text-center shadow-[0_24px_60px_rgba(11,31,59,0.2)]">
+          <div className="text-2xl md:text-3xl font-extrabold text-white mb-3 tracking-tight">
             Mali privezak. <span className="text-teal">Velika sigurnost.</span>
           </div>
-          <p className="text-white/50 font-medium mb-8">Zauvek uz vas.</p>
-          <Link href="/naruci" className="inline-block btn-primary text-base px-8 py-4">
+          <p className="text-white/50 font-medium mb-7 text-sm md:text-base">Zauvek uz vas.</p>
+          <Link href="/naruci" className="inline-block btn-primary text-base px-7 py-4">
             {t('hero_cta')} →
           </Link>
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="border-t border-[#E2EAF0] py-10 px-4 bg-white">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-5">
+      {/* ── FOOTER ──────────────────────────────────────────────────── */}
+      <footer className="border-t border-[#E2EAF0] py-8 md:py-10 px-4 bg-white">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <PetCodeLogo size="sm" showTagline />
-          <div className="text-xs text-gray-400 font-medium">© 2025 PetCode · Srbija · petcodeoffice@gmail.com</div>
-          <div className="flex items-center gap-5">
+          <div className="text-xs text-gray-400 font-medium text-center">© 2025 PetCode · Srbija · petcodeoffice@gmail.com</div>
+          <div className="flex items-center gap-4 flex-wrap justify-center">
             <Link href="/prodavnica" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">Prodavnica</Link>
-            <Link href="/o-nama" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">O nama</Link>
-            <Link href="/login" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">{t('nav_login')}</Link>
-            <Link href="/kontakt" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">Kontakt</Link>
+            <Link href="/o-nama"     className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">O nama</Link>
+            <Link href="/login"      className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">{t('nav_login')}</Link>
+            <Link href="/kontakt"    className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">Kontakt</Link>
           </div>
         </div>
       </footer>
