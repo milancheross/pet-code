@@ -3,6 +3,10 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
+
+  // Only purpose of middleware: keep session cookies fresh across requests.
+  // Auth-based routing is handled by each page individually to avoid
+  // edge-runtime getUser() failures causing redirect loops.
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -18,16 +22,8 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
-  const path = request.nextUrl.pathname
-
-  if (path.startsWith('/dashboard') && !user) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-
-  if (path === '/login' && user) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
+  // Refresh session if needed — ignore the result, let pages decide routing
+  await supabase.auth.getSession()
 
   return supabaseResponse
 }

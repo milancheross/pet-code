@@ -31,11 +31,17 @@ export default function DashboardPage() {
   useEffect(() => { load() }, [])
 
   const load = async () => {
-    const { data: { user } } = await sb.auth.getUser()
-    if (!user) { router.push('/login'); return }
-    const { data } = await sb.from('pets').select('*').eq('owner_id', user.id)
-    if (data?.length) { setPets(data); await selectPet(data[0]) }
-    setLoading(false)
+    try {
+      const { data: { user } } = await sb.auth.getUser()
+      if (!user) { router.push('/login'); return }
+      const { data } = await sb.from('pets').select('*').eq('owner_id', user.id)
+      if (data?.length) { setPets(data); await selectPet(data[0]) }
+    } catch (e) {
+      console.error('Dashboard load error:', e)
+      router.push('/login')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const selectPet = async (p: Pet) => {
