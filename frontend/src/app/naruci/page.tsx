@@ -31,7 +31,7 @@ function OrderForm() {
   const total = qty * unitPrice
 
   const handleSubmit = async () => {
-    if (!name || !phone || !address || !city) { setError(t('order_required')); return }
+    if (!name || !phone || !email || !address || !city) { setError(t('order_required')); return }
     setLoading(true); setError('')
     try {
       const res = await fetch('/api/orders', {
@@ -126,7 +126,7 @@ function OrderForm() {
           <div className="card space-y-4">
             <div><label className="label">{t('order_name')}</label><input className="input" value={name} onChange={e=>setName(e.target.value)} placeholder="Marko Petrović" /></div>
             <div><label className="label">{t('order_phone')}</label><input className="input" type="tel" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+381 64 123 456" /></div>
-            <div><label className="label">{t('order_email')}</label><input className="input" type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="opciono" /></div>
+            <div><label className="label">{t('order_email')} <span className="text-red-400">*</span></label><input className="input" type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="marko@gmail.com" required /></div>
             <div><label className="label">{t('order_address')}</label><input className="input" value={address} onChange={e=>setAddress(e.target.value)} placeholder="Knez Mihailova 1" /></div>
             <div><label className="label">{t('order_city')}</label><input className="input" value={city} onChange={e=>setCity(e.target.value)} placeholder="Beograd" /></div>
             <div><label className="label">{t('order_note')}</label><textarea className="input resize-none h-20" value={note} onChange={e=>setNote(e.target.value)} placeholder={t('order_note_ph')} /></div>
