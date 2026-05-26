@@ -242,11 +242,15 @@ export default function AdminPage() {
   const [editUploading,        setEditUploading]        = useState(false)
   const editFileRef = useRef<HTMLInputElement>(null)
 
-  // Bulk edit
+  // Bulk edit (products)
   const [selectedIds,  setSelectedIds]  = useState<string[]>([])
   const [bulkPrice,    setBulkPrice]    = useState('')
   const [bulkDiscount, setBulkDiscount] = useState('')
   const [bulkSaving,   setBulkSaving]   = useState(false)
+
+  // Bulk QR
+  const [selectedQrIds, setSelectedQrIds] = useState<string[]>([])
+  const [qrBulkSaving,  setQrBulkSaving]  = useState(false)
 
   // Modals
   const [petPreview,  setPetPreview]  = useState<any>(null)
@@ -518,6 +522,7 @@ export default function AdminPage() {
         {/* ── QR ── */}
         {tab === 'qr' && (
           <div className="space-y-4">
+            {/* Generate + export */}
             <div className="card flex items-end gap-3 flex-wrap">
               <div className="flex-1 min-w-32">
                 <label className="label">Generiši QR kodove</label>
@@ -526,24 +531,79 @@ export default function AdminPage() {
               <button onClick={generateQr} disabled={loading} className="btn-navy disabled:opacity-50">{loading ? 'Čekaj...' : `+ Generiši ${gen}`}</button>
               <button onClick={exportCsv} className="btn-outline">📥 Export CSV</button>
             </div>
-            <div className="flex gap-2 flex-wrap">
+
+            {/* Filters + search */}
+            <div className="flex gap-2 flex-wrap items-center">
               {(['all','unused','active'] as const).map(f => (
-                <button key={f} onClick={() => setFilter(f)}
+                <button key={f} onClick={() => { setFilter(f); setSelectedQrIds([]) }}
                   className={`px-3 py-1.5 rounded-full text-xs font-black border-2 transition-all ${filter === f ? 'bg-teal border-teal text-white' : 'border-[#e2f0ef] text-gray-400 bg-white'}`}>
                   {f === 'all' ? 'Svi' : f === 'unused' ? 'Neiskorišćeni' : 'Aktivni'}
                 </button>
               ))}
             </div>
+
             {loading && <div className="card text-center py-6 text-teal font-black animate-pulse">Učitavanje...</div>}
             {!loading && filteredQr.length === 0 && <div className="card text-center py-8 text-gray-400">Nema QR kodova — klikni Generiši</div>}
+
+            {/* Select all bar */}
+            {!loading && filteredQr.length > 0 && (
+              <div className="flex items-center justify-between bg-white border border-[#E2EAF0] rounded-2xl px-4 py-2.5">
+                <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 accent-teal"
+                    checked={selectedQrIds.length === filteredQr.length && filteredQr.length > 0}
+                    onChange={e => setSelectedQrIds(e.target.checked ? filteredQr.map((q:any) => q.id) : [])}
+                  />
+                  <span className="text-xs font-bold text-gray-500">
+                    {selectedQrIds.length > 0
+                      ? `Selektovano: ${selectedQrIds.length} / ${filteredQr.length}`
+                      : `Selektuj sve (${filteredQr.length})`}
+                  </span>
+                </label>
+
+                {selectedQrIds.length > 0 && (
+                  <button
+                    disabled={qrBulkSaving}
+                    onClick={async () => {
+                      const unusedSelected = filteredQr.filter((q:any) => selectedQrIds.includes(q.id) && q.status === 'unused')
+                      if (unusedSelected.length === 0) { alert('Možete brisati samo neiskorišćene QR kodove'); return }
+                      if (!confirm(`Obrisati ${unusedSelected.length} neiskorišćenih QR kodova? Ovo je nepovratno.`)) return
+                      setQrBulkSaving(true)
+                      try {
+                        const r = await adminFetch({ action: 'bulk_delete_qr', payload: { ids: unusedSelected.map((q:any) => q.id) } })
+                        if (r.error) alert(r.error)
+                        else { setSelectedQrIds([]); await load() }
+                      } finally { setQrBulkSaving(false) }
+                    }}
+                    className="text-xs font-black text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-full transition-colors disabled:opacity-50"
+                  >
+                    {qrBulkSaving ? 'Brišem...' : `🗑️ Obriši selektovane (${filteredQr.filter((q:any) => selectedQrIds.includes(q.id) && q.status === 'unused').length} neiskorišćenih)`}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* QR list */}
             <div className="space-y-2">
-              {filteredQr.map(q => (
-                <div key={q.id} className="card flex items-center justify-between py-2.5 px-4">
-                  <div>
+              {filteredQr.map((q:any) => (
+                <div key={q.id} className={`card flex items-center gap-3 py-2.5 px-4 transition-colors ${selectedQrIds.includes(q.id) ? 'bg-teal/5 border-teal/30' : ''}`}>
+                  {/* Checkbox */}
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 accent-teal shrink-0"
+                    checked={selectedQrIds.includes(q.id)}
+                    onChange={e => setSelectedQrIds(prev =>
+                      e.target.checked ? [...prev, q.id] : prev.filter(x => x !== q.id)
+                    )}
+                  />
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
                     <div className="font-black text-navy font-mono text-sm">{q.code}</div>
                     <div className="text-[11px] text-gray-400">{new Date(q.created_at).toLocaleDateString('sr')}</div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  {/* Actions */}
+                  <div className="flex items-center gap-3 shrink-0">
                     <span className={`text-[11px] font-black px-2 py-0.5 rounded-full ${q.status === 'active' ? 'bg-teal/10 text-teal' : q.status === 'unused' ? 'bg-orange-50 text-orange-500' : 'bg-red-50 text-red-500'}`}>{q.status}</span>
                     <a href={`/p/${q.code}`} target="_blank" className="text-xs text-teal font-bold hover:underline">Test</a>
                     {q.status === 'active'   && <button onClick={() => updateQrStatus(q.id, 'disabled')} className="text-xs text-red-400 font-bold hover:text-red-600">Deaktiviraj</button>}

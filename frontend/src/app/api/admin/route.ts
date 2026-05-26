@@ -45,6 +45,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true })
   }
 
+  if (action === 'bulk_delete_qr') {
+    const { ids } = payload
+    if (!ids || !ids.length) return NextResponse.json({ ok: true })
+    // Only allow deleting unused codes
+    const { data: rows } = await sb.from('qr_codes').select('id, status').in('id', ids)
+    const deletable = (rows || []).filter((r: any) => r.status === 'unused').map((r: any) => r.id)
+    if (deletable.length === 0) return NextResponse.json({ error: 'Nema neiskorišćenih kodova za brisanje' }, { status: 400 })
+    const { error } = await sb.from('qr_codes').delete().in('id', deletable)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ ok: true, deleted: deletable.length })
+  }
+
   if (action === 'update_order') {
     await sb.from('orders').update({ status: payload.status }).eq('id', payload.id)
     return NextResponse.json({ ok: true })

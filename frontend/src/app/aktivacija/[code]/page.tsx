@@ -34,11 +34,38 @@ export default function ActivationPage({ params }: { params: { code: string } })
   const doAuth = async () => {
     setLoading(true); setError('')
     try {
-      const {data,error:e} = await sb.auth.signUp({email,password:pass,options:{data:{name:oName}}})
-      if(e) throw e
-      await sb.from('owners').insert({id:data.user!.id,name:oName,phone:oPhone,email})
+      let userId: string
+
+      // 1. Pokušaj registraciju
+      const { data, error: signUpErr } = await sb.auth.signUp({
+        email, password: pass, options: { data: { name: oName } }
+      })
+
+      if (signUpErr) {
+        // Ako nalog već postoji → pokušaj prijavu
+        const msg = signUpErr.message.toLowerCase()
+        if (msg.includes('already') || msg.includes('registered') || msg.includes('exists') || msg.includes('taken')) {
+          const { data: loginData, error: loginErr } = await sb.auth.signInWithPassword({ email, password: pass })
+          if (loginErr) throw new Error('Nalog već postoji — proverite lozinku i pokušajte ponovo')
+          if (!loginData.user) throw new Error('Greška pri prijavi, pokušajte ponovo')
+          userId = loginData.user.id
+        } else {
+          throw signUpErr
+        }
+      } else {
+        // Registracija uspešna
+        if (!data.user) throw new Error('Potvrdite email adresu i prijavite se ponovo')
+        userId = data.user.id
+      }
+
+      // 2. Sačuvaj/ažuriraj vlasnika (upsert, ne insert — bezbedno i za ponovni pokušaj)
+      await sb.from('owners').upsert(
+        { id: userId, name: oName, phone: oPhone, email },
+        { onConflict: 'id' }
+      )
+
       setStep('pet')
-    } catch(e:any){setError(e.message)} finally{setLoading(false)}
+    } catch(e:any){ setError(e.message) } finally{ setLoading(false) }
   }
 
   const doPet = async () => {
