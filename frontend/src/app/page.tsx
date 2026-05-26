@@ -6,21 +6,6 @@ import HamburgerNav from '@/components/HamburgerNav'
 import Link from 'next/link'
 import { useState } from 'react'
 import { PRICE_PER_TAG } from '@/lib/types'
-import type { Metadata } from 'next'
-
-export const metadata: Metadata = {
-  title: 'PetCode.rs — QR identifikacija ljubimaca | Srbija',
-  description: 'QR privezak od nerđajućeg čelika za pse i mačke. Skeniranjem koda dobijate kontakt vlasnika i lokaciju ljubimca. Dostava Post Express-om po celoj Srbiji. Plaćanje pouzećem.',
-  openGraph: {
-    title: 'PetCode.rs — QR identifikacija ljubimaca',
-    description: 'QR privezak od nerđajućeg čelika za pse i mačke. Plaćanje pouzećem. Dostava po Srbiji.',
-    url: 'https://pet-code.rs',
-    siteName: 'PetCode.rs',
-    locale: 'sr_RS',
-    type: 'website',
-  },
-  keywords: ['qr privezak', 'privezak za pse', 'identifikacija ljubimaca', 'petcode', 'qr oznaka ljubimac srbija'],
-}
 
 const FAQ_KEYS = [
   ['faq_q1','faq_a1'],['faq_q2','faq_a2'],['faq_q3','faq_a3'],['faq_q4','faq_a4'],
