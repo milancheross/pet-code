@@ -236,7 +236,7 @@ export default function AdminPage() {
   const [auth,    setAuth]   = useState(false)
   const [pin,     setPin]    = useState('')
   const pinRef = useRef('')
-  const [tab, setTab] = useState<'qr'|'orders'|'pets'|'shop'>('orders')
+  const [tab, setTab] = useState<'qr'|'orders'|'pets'|'shop'|'crm'>('orders')
   const [qr,     setQr]     = useState<any[]>([])
   const [orders, setOrders] = useState<any[]>([])
   const [pets,   setPets]   = useState<any[]>([])
