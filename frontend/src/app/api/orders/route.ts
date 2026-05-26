@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
+import { sendMail } from '@/lib/mailer'
 
 function esc(s: string | null | undefined): string {
   if (!s) return ''
@@ -46,19 +47,14 @@ export async function POST(req: NextRequest) {
     })
     if (dbError) throw dbError
 
-    if (process.env.RESEND_API_KEY) {
-      const { Resend } = await import('resend')
-      const resend = new Resend(process.env.RESEND_API_KEY)
+    const productLabel = product_slug
+      ? product_slug.replace(/-[a-z0-9]{4,}$/, '').replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
+      : 'Privezak'
 
-      const productLabel = product_slug
-        ? product_slug.replace(/-[a-z0-9]{4,}$/, '').replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
-        : 'Privezak'
-
-      await resend.emails.send({
-        from: process.env.RESEND_FROM || 'noreply@pet-code.rs',
-        to: process.env.ADMIN_EMAIL || 'petcodeoffice@gmail.com',
-        subject: `🛍️ Nova narudžbina — ${esc(customer_name)} · ${qty}x ${productLabel} · ${total.toLocaleString()} RSD`,
-        html: `
+    await sendMail({
+      to: process.env.ADMIN_EMAIL || 'petcodeoffice@gmail.com',
+      subject: `🛍️ Nova narudžbina — ${esc(customer_name)} · ${qty}x ${productLabel} · ${total.toLocaleString()} RSD`,
+      html: `
 <!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"/></head>
@@ -137,8 +133,7 @@ export async function POST(req: NextRequest) {
 </body>
 </html>
         `,
-      })
-    }
+    })
 
     return NextResponse.json({ ok: true })
   } catch (err) {
