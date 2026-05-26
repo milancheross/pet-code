@@ -36,29 +36,32 @@ export default function ActivationPage({ params }: { params: { code: string } })
     try {
       let userId: string
 
-      // 1. Pokušaj registraciju
-      const { data, error: signUpErr } = await sb.auth.signUp({
-        email, password: pass, options: { data: { name: oName } }
-      })
+      // 1. Prvo pokušaj prijavu (ako nalog već postoji)
+      const { data: loginData, error: loginErr } = await sb.auth.signInWithPassword({ email, password: pass })
 
-      if (signUpErr) {
-        // Ako nalog već postoji → pokušaj prijavu
-        const msg = signUpErr.message.toLowerCase()
-        if (msg.includes('already') || msg.includes('registered') || msg.includes('exists') || msg.includes('taken')) {
-          const { data: loginData, error: loginErr } = await sb.auth.signInWithPassword({ email, password: pass })
-          if (loginErr) throw new Error('Nalog već postoji — proverite lozinku i pokušajte ponovo')
-          if (!loginData.user) throw new Error('Greška pri prijavi, pokušajte ponovo')
-          userId = loginData.user.id
-        } else {
+      if (!loginErr && loginData.user) {
+        // Postojeći korisnik — uspešna prijava
+        userId = loginData.user.id
+      } else {
+        // Nalog ne postoji ili pogrešna lozinka → pokušaj registraciju
+        const { data, error: signUpErr } = await sb.auth.signUp({
+          email, password: pass, options: { data: { name: oName } }
+        })
+
+        if (signUpErr) {
+          // Ako nalog postoji ali je lozinka pogrešna
+          const msg = signUpErr.message.toLowerCase()
+          if (msg.includes('already') || msg.includes('registered') || msg.includes('exists') || msg.includes('taken')) {
+            throw new Error('Nalog već postoji — proverite lozinku i pokušajte ponovo')
+          }
           throw signUpErr
         }
-      } else {
-        // Registracija uspešna
-        if (!data.user) throw new Error('Potvrdite email adresu i prijavite se ponovo')
+
+        if (!data.user) throw new Error('Proverite email i potvrdite registraciju, zatim se prijavite')
         userId = data.user.id
       }
 
-      // 2. Sačuvaj/ažuriraj vlasnika (upsert, ne insert — bezbedno i za ponovni pokušaj)
+      // 2. Sačuvaj/ažuriraj vlasnika
       await sb.from('owners').upsert(
         { id: userId, name: oName, phone: oPhone, email },
         { onConflict: 'id' }
@@ -134,7 +137,7 @@ export default function ActivationPage({ params }: { params: { code: string } })
                 <label className="label">{t('act_photo')}</label>
                 <div onClick={()=>document.getElementById('ph')?.click()}
                   className="w-full h-36 border-2 border-dashed border-[#e2f0ef] rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-teal transition-colors overflow-hidden">
-                  {preview?<img src={preview} className="w-full h-full object-cover"/>:<><div className="text-3xl mb-1">📷</div><div className="text-sm text-gray-400 font-semibold">{t('act_photo_hint')}</div></>}
+                  {preview?<img src={preview} className="w-full h-full object-cover object-top"/>:<><div className="text-3xl mb-1">📷</div><div className="text-sm text-gray-400 font-semibold">{t('act_photo_hint')}</div></>}
                 </div>
                 <input id="ph" type="file" accept="image/*" className="hidden" onChange={onPhoto}/>
               </div>

@@ -95,7 +95,7 @@ export default function DashboardPage() {
               <>
                 <div className="card mb-4 flex items-center gap-4">
                   <div className="w-14 h-14 rounded-2xl bg-teal/10 flex items-center justify-center text-2xl overflow-hidden flex-shrink-0">
-                    {pet.photo_url ? <Image src={pet.photo_url} alt={pet.name} width={56} height={56} className="w-full h-full object-cover rounded-2xl" /> : '🐾'}
+                    {pet.photo_url ? <Image src={pet.photo_url} alt={pet.name} width={56} height={56} className="w-full h-full object-cover object-top rounded-2xl" /> : '🐾'}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-black text-navy text-lg">{pet.name}</div>

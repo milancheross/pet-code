@@ -26,7 +26,7 @@ export const translations = {
     order_error: 'Greška pri slanju. Pokušajte ponovo.',
     order_required: 'Popunite obavezna polja.',
     // Aktivacija
-    act_title: 'Aktivacija privezka', act_sub_auth: 'Napravite nalog da aktivirate privezak',
+    act_title: 'Aktivacija privezka', act_sub_auth: 'Prijavite se ili napravite nalog',
     act_sub_pet: 'Unesite podatke o vašem ljubimcu', act_step1: 'Vaši podaci', act_step2: 'Podaci o ljubimcu',
     act_owner_name: 'Vaše ime *', act_phone: 'Telefon *', act_email: 'Email *', act_pass: 'Lozinka *',
     act_pass_ph: 'minimum 8 karaktera', act_next: 'Nastavi →', act_loading: 'Čekajte...',
@@ -86,7 +86,7 @@ export const translations = {
     order_sending: 'Sending...', order_success_t: 'Order received! 🎉',
     order_success: 'We will contact you within 24 hours to confirm and ship.',
     order_error: 'Error sending. Please try again.', order_required: 'Please fill in required fields.',
-    act_title: 'Tag Activation', act_sub_auth: 'Create account to activate tag',
+    act_title: 'Tag Activation', act_sub_auth: 'Sign in or create an account',
     act_sub_pet: 'Enter your pet\'s info', act_step1: 'Your details', act_step2: 'Pet details',
     act_owner_name: 'Your name *', act_phone: 'Phone *', act_email: 'Email *', act_pass: 'Password *',
     act_pass_ph: 'minimum 8 characters', act_next: 'Continue →', act_loading: 'Please wait...',

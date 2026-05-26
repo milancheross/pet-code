@@ -17,12 +17,7 @@ export default function PetClient({ pet: p, isNew }: { pet: PetFull; isNew: bool
 
   const handleSendLocation = async () => {
     setLocState('asking')
-
-    if (!navigator.geolocation) {
-      setLocState('error')
-      return
-    }
-
+    if (!navigator.geolocation) { setLocState('error'); return }
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         setLocState('sending')
@@ -30,25 +25,15 @@ export default function PetClient({ pet: p, isNew }: { pet: PetFull; isNew: bool
           const res = await fetch('/api/notify-location', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              pet_id: p.id,
-              lat: pos.coords.latitude,
-              lng: pos.coords.longitude,
-              accuracy: pos.coords.accuracy,
-            }),
+            body: JSON.stringify({ pet_id: p.id, lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }),
           })
           const data = await res.json()
           if (!res.ok) throw new Error(data.error)
           setMapsUrl(data.mapsUrl)
           setLocState('sent')
-        } catch {
-          setLocState('error')
-        }
+        } catch { setLocState('error') }
       },
-      (err) => {
-        if (err.code === err.PERMISSION_DENIED) setLocState('denied')
-        else setLocState('error')
-      },
+      (err) => { if (err.code === err.PERMISSION_DENIED) setLocState('denied'); else setLocState('error') },
       { enableHighAccuracy: true, timeout: 10000 }
     )
   }
@@ -65,27 +50,65 @@ export default function PetClient({ pet: p, isNew }: { pet: PetFull; isNew: bool
             </div>
           )}
 
-          {/* Header */}
-          <div className="bg-[#0B1F3B] pb-6 pt-5 px-5 text-center relative">
-            <div className="absolute top-4 right-4"><LangSwitcher dark /></div>
-            <a href="/" className="font-mono text-[11px] text-white/25 tracking-widest uppercase mb-4 block">
-              pet<span className="text-teal">code</span>.rs
-            </a>
-            <div className="w-24 h-24 rounded-full mx-auto mb-3 border-[3px] border-teal/30 overflow-hidden bg-teal/10 flex items-center justify-center text-5xl">
-              {p.photo_url
-                ? <Image src={p.photo_url} alt={p.name} width={96} height={96} className="w-full h-full object-cover" unoptimized />
-                : emoji}
-            </div>
-            <h1 className="text-white text-2xl font-black tracking-tight mb-1">{p.name}</h1>
-            <p className="text-white/40 text-xs font-mono">{[p.breed, p.age, p.color].filter(Boolean).join(' · ')}</p>
-            {p.is_lost && (
-              <div className="inline-flex bg-red-500 text-white text-xs font-black px-4 py-1.5 rounded-full mt-3 animate-pulse">
-                {t('prof_lost')}
-              </div>
-            )}
-          </div>
+          {/* ── Header: full-width hero photo OR dark fallback ── */}
+          {p.photo_url ? (
+            <div className="relative overflow-hidden" style={{ height: 220 }}>
+              {/* Photo — object-top so the face is always visible */}
+              <Image
+                src={p.photo_url}
+                alt={p.name}
+                fill
+                sizes="(max-width: 640px) 100vw, 384px"
+                className="object-cover object-top"
+                unoptimized
+              />
+              {/* Gradient: transparent top → navy bottom */}
+              <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-[#0B1F3B]" />
 
-          {/* CTA dugmad - poziv i SMS */}
+              {/* Top bar */}
+              <div className="absolute top-0 left-0 right-0 px-4 pt-4 flex justify-between items-start">
+                <a href="/" className="font-mono text-[11px] text-white/50 tracking-widest uppercase">
+                  pet<span className="text-teal">code</span>.rs
+                </a>
+                <LangSwitcher dark />
+              </div>
+
+              {/* Name & info pinned to bottom */}
+              <div className="absolute bottom-0 left-0 right-0 px-5 pb-5 text-center">
+                <h1 className="text-white text-2xl font-black tracking-tight drop-shadow mb-0.5">{p.name}</h1>
+                <p className="text-white/60 text-xs font-mono drop-shadow">
+                  {[p.breed, p.age, p.color].filter(Boolean).join(' · ')}
+                </p>
+                {p.is_lost && (
+                  <div className="inline-flex bg-red-500 text-white text-xs font-black px-4 py-1.5 rounded-full mt-3 animate-pulse">
+                    {t('prof_lost')}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            /* Dark header without photo */
+            <div className="bg-[#0B1F3B] pb-6 pt-5 px-5 text-center relative">
+              <div className="absolute top-4 right-4"><LangSwitcher dark /></div>
+              <a href="/" className="font-mono text-[11px] text-white/25 tracking-widest uppercase mb-4 block">
+                pet<span className="text-teal">code</span>.rs
+              </a>
+              <div className="w-24 h-24 rounded-full mx-auto mb-3 border-[3px] border-teal/30 overflow-hidden bg-teal/10 flex items-center justify-center text-5xl">
+                {emoji}
+              </div>
+              <h1 className="text-white text-2xl font-black tracking-tight mb-1">{p.name}</h1>
+              <p className="text-white/40 text-xs font-mono">
+                {[p.breed, p.age, p.color].filter(Boolean).join(' · ')}
+              </p>
+              {p.is_lost && (
+                <div className="inline-flex bg-red-500 text-white text-xs font-black px-4 py-1.5 rounded-full mt-3 animate-pulse">
+                  {t('prof_lost')}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* CTA dugmad */}
           {p.owners?.phone && (
             <div className="bg-[#F4F7FA] border-b border-[#E2EAF0] p-4 flex gap-3">
               <a href={`tel:${phone}`}
@@ -99,45 +122,34 @@ export default function PetClient({ pet: p, isNew }: { pet: PetFull; isNew: bool
             </div>
           )}
 
-          {/* LOKACIJA SEKCIJA */}
+          {/* Lokacija */}
           <div className="mx-4 my-4">
             {locState === 'idle' && (
-              <button
-                onClick={handleSendLocation}
-                className="w-full bg-amber-50 border-2 border-amber-200 hover:border-amber-400 hover:bg-amber-100 active:scale-95 transition-all rounded-2xl py-4 px-4 text-center"
-              >
+              <button onClick={handleSendLocation}
+                className="w-full bg-amber-50 border-2 border-amber-200 hover:border-amber-400 hover:bg-amber-100 active:scale-95 transition-all rounded-2xl py-4 px-4 text-center">
                 <div className="text-xl mb-1">📍</div>
                 <div className="text-sm font-black text-amber-800">Pošalji lokaciju vlasniku</div>
-                <div className="text-xs text-amber-600 font-semibold mt-1">
-                  Obavestite vlasnika gde se {p.name} nalazi
-                </div>
+                <div className="text-xs text-amber-600 font-semibold mt-1">Obavestite vlasnika gde se {p.name} nalazi</div>
               </button>
             )}
-
             {locState === 'asking' && (
               <div className="w-full bg-blue-50 border-2 border-blue-200 rounded-2xl py-4 px-4 text-center">
                 <div className="text-xl mb-1">🔍</div>
                 <div className="text-sm font-black text-blue-800">Tražim vašu lokaciju...</div>
-                <div className="text-xs text-blue-600 font-semibold mt-1">
-                  Dozvolite pristup lokaciji u browser-u
-                </div>
+                <div className="text-xs text-blue-600 font-semibold mt-1">Dozvolite pristup lokaciji u browser-u</div>
               </div>
             )}
-
             {locState === 'sending' && (
               <div className="w-full bg-blue-50 border-2 border-blue-200 rounded-2xl py-4 px-4 text-center">
                 <div className="text-xl mb-1 animate-bounce">📨</div>
                 <div className="text-sm font-black text-blue-800">Šaljem lokaciju vlasniku...</div>
               </div>
             )}
-
             {locState === 'sent' && (
               <div className="w-full bg-green-50 border-2 border-green-300 rounded-2xl py-4 px-4 text-center">
                 <div className="text-xl mb-1">✅</div>
                 <div className="text-sm font-black text-green-800">Lokacija poslata vlasniku!</div>
-                <div className="text-xs text-green-600 font-semibold mt-1 mb-3">
-                  Vlasnik je obavešten gde se {p.name} nalazi
-                </div>
+                <div className="text-xs text-green-600 font-semibold mt-1 mb-3">Vlasnik je obavešten gde se {p.name} nalazi</div>
                 {mapsUrl && (
                   <a href={mapsUrl} target="_blank"
                     className="inline-flex items-center gap-1.5 text-xs font-black text-green-700 bg-green-100 px-3 py-1.5 rounded-full hover:bg-green-200 transition-colors">
@@ -146,30 +158,20 @@ export default function PetClient({ pet: p, isNew }: { pet: PetFull; isNew: bool
                 )}
               </div>
             )}
-
             {locState === 'denied' && (
               <div className="w-full bg-red-50 border-2 border-red-200 rounded-2xl py-4 px-4 text-center">
                 <div className="text-xl mb-1">🚫</div>
                 <div className="text-sm font-black text-red-800">Lokacija nije dozvoljena</div>
-                <div className="text-xs text-red-600 font-semibold mt-1">
-                  Molimo pozovite vlasnika direktno ili pokušajte u podešavanjima browser-a
-                </div>
-                <button onClick={() => setLocState('idle')} className="mt-2 text-xs text-red-500 font-bold underline">
-                  Pokušaj ponovo
-                </button>
+                <div className="text-xs text-red-600 font-semibold mt-1">Molimo pozovite vlasnika direktno</div>
+                <button onClick={() => setLocState('idle')} className="mt-2 text-xs text-red-500 font-bold underline">Pokušaj ponovo</button>
               </div>
             )}
-
             {locState === 'error' && (
               <div className="w-full bg-red-50 border-2 border-red-200 rounded-2xl py-4 px-4 text-center">
                 <div className="text-xl mb-1">⚠️</div>
                 <div className="text-sm font-black text-red-800">Greška pri slanju lokacije</div>
-                <div className="text-xs text-red-600 font-semibold mt-1">
-                  Pozovite vlasnika direktno
-                </div>
-                <button onClick={() => setLocState('idle')} className="mt-2 text-xs text-red-500 font-bold underline">
-                  Pokušaj ponovo
-                </button>
+                <div className="text-xs text-red-600 font-semibold mt-1">Pozovite vlasnika direktno</div>
+                <button onClick={() => setLocState('idle')} className="mt-2 text-xs text-red-500 font-bold underline">Pokušaj ponovo</button>
               </div>
             )}
           </div>
@@ -206,9 +208,7 @@ export default function PetClient({ pet: p, isNew }: { pet: PetFull; isNew: bool
           {/* Napomena */}
           {p.note && (
             <div className="mx-4 my-3 bg-amber-50 border border-amber-200 rounded-2xl p-4">
-              <div className="text-[11px] font-black text-amber-600 uppercase tracking-widest mb-1.5">
-                {t('prof_note')}
-              </div>
+              <div className="text-[11px] font-black text-amber-600 uppercase tracking-widest mb-1.5">{t('prof_note')}</div>
               <div className="text-sm text-amber-900 leading-relaxed font-medium">{p.note}</div>
             </div>
           )}
