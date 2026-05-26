@@ -10,9 +10,11 @@ export async function POST(req: NextRequest) {
   try {
     const { pet_id, lat, lng, accuracy } = await req.json()
 
-    if (!pet_id || !lat || !lng) {
+    if (!pet_id || lat == null || lng == null || isNaN(Number(lat)) || isNaN(Number(lng))) {
       return NextResponse.json({ error: 'Missing data' }, { status: 400 })
     }
+    const latNum = Number(lat)
+    const lngNum = Number(lng)
 
     // Dohvati podatke o ljubimcu i vlasniku
     const supabase = createAdminClient()
@@ -26,15 +28,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Pet not found' }, { status: 404 })
     }
 
-    const ownerEmail = pet.owners?.email || null
-    const ownerPhone = pet.owners?.phone || null
+    const owners = pet.owners as { name?: string | null; email?: string | null; phone?: string | null } | null
+    const ownerEmail: string | null = owners?.email || null
     const petName = esc(pet.name)
-    const ownerName = esc(pet.owners?.name) || 'Vlasniče'
+    const ownerName = esc(owners?.name) || 'Vlasniče'
 
-    const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`
-    const mapsEmbed = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=16&size=600x300&markers=color:red%7C${lat},${lng}&key=nokey`
+    const mapsUrl = `https://www.google.com/maps?q=${latNum},${lngNum}`
     const now = new Date().toLocaleString('sr-Latn-RS', { timeZone: 'Europe/Belgrade' })
-    const accuracyText = accuracy ? `±${Math.round(accuracy)}m` : 'nepoznata preciznost'
+    const accuracyText = accuracy ? `±${Math.round(Number(accuracy))}m` : 'nepoznata preciznost'
 
     // Log lokaciju u bazu
     await supabase.from('scan_logs').insert({
@@ -100,11 +101,11 @@ export async function POST(req: NextRequest) {
         <div style="display:grid;gap:8px;">
           <div style="display:flex;justify-content:space-between;">
             <span style="font-size:13px;color:#7a8fa6;font-weight:600;">Geografska širina</span>
-            <span style="font-size:13px;color:#1a2d4a;font-weight:800;font-family:monospace;">${lat.toFixed(6)}</span>
+            <span style="font-size:13px;color:#1a2d4a;font-weight:800;font-family:monospace;">${latNum.toFixed(6)}</span>
           </div>
           <div style="display:flex;justify-content:space-between;">
             <span style="font-size:13px;color:#7a8fa6;font-weight:600;">Geografska dužina</span>
-            <span style="font-size:13px;color:#1a2d4a;font-weight:800;font-family:monospace;">${lng.toFixed(6)}</span>
+            <span style="font-size:13px;color:#1a2d4a;font-weight:800;font-family:monospace;">${lngNum.toFixed(6)}</span>
           </div>
           <div style="display:flex;justify-content:space-between;">
             <span style="font-size:13px;color:#7a8fa6;font-weight:600;">Preciznost</span>
@@ -142,7 +143,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ ok: true, mapsUrl })
-  } catch {
+  } catch (err) {
+    console.error('[notify-location]', err)
     return NextResponse.json({ error: 'Greška pri slanju lokacije' }, { status: 500 })
   }
 }

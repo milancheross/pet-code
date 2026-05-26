@@ -2,11 +2,7 @@ import Link from 'next/link'
 import PetCodeLogo from '@/components/PetCodeLogo'
 import HamburgerNav from '@/components/HamburgerNav'
 import { createAdminClient } from '@/lib/supabase/server'
-import { unstable_noStore as noStore } from 'next/cache'
 import type { Metadata } from 'next'
-
-// Belt-and-suspenders: force-dynamic + noStore() ensure zero caching
-export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Prodavnica — PetCode.rs',
@@ -14,7 +10,6 @@ export const metadata: Metadata = {
 }
 
 async function getShopData() {
-  noStore() // opt out of Next.js Data Cache explicitly
   try {
     const sb = createAdminClient()
     const [{ data: categories }, { data: products }] = await Promise.all([

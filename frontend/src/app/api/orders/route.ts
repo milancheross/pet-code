@@ -16,9 +16,29 @@ export async function POST(req: NextRequest) {
     }
 
     const qty = Math.max(1, parseInt(quantity) || 1)
-    const total = total_rsd ? parseInt(total_rsd) : qty * 990 // fallback
 
     const supabase = createAdminClient()
+
+    // Server-side price calculation — never trust client-supplied total_rsd
+    let unitPrice = 1500 // default PRICE_PER_TAG
+    if (product_slug) {
+      const { data: productData } = await supabase
+        .from('products')
+        .select('regular_price_rsd, sale_price_rsd, sale_start, sale_end, price_rsd')
+        .eq('slug', product_slug)
+        .eq('is_active', true)
+        .single()
+      if (productData) {
+        const regularPrice = productData.regular_price_rsd ?? productData.price_rsd ?? 1500
+        const now = new Date()
+        const hasSale = productData.sale_price_rsd != null &&
+          productData.sale_price_rsd < regularPrice &&
+          (!productData.sale_start || new Date(productData.sale_start) <= now) &&
+          (!productData.sale_end   || new Date(productData.sale_end)   >= now)
+        unitPrice = hasSale ? productData.sale_price_rsd : regularPrice
+      }
+    }
+    const total = qty * unitPrice
     const { error: dbError } = await supabase.from('orders').insert({
       customer_name, customer_phone, customer_email: customer_email || null,
       address, city, quantity: qty, note: note || null, total_rsd: total,

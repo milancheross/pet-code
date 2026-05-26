@@ -127,3 +127,47 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS sale_end date;
 -- Backfill: copy existing price_rsd → regular_price_rsd
 UPDATE products SET regular_price_rsd = ROUND(price_rsd)::integer
   WHERE regular_price_rsd IS NULL AND price_rsd IS NOT NULL;
+
+-- =============================================
+-- B2B Partners (CRM)
+-- =============================================
+CREATE TABLE IF NOT EXISTS partners (
+  id                  uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  name                text NOT NULL,
+  type                text NOT NULL DEFAULT 'pet_shop',
+  city                text,
+  address             text,
+  phone               text,
+  email               text,
+  contact_person      text,
+  instagram_followers integer,
+  status              text NOT NULL DEFAULT 'nije_kontaktiran',
+  first_contact_date  date,
+  next_contact        date,
+  tags_left           integer DEFAULT 0,
+  commission_percent  numeric(5,2) DEFAULT 20,
+  rejection_reason    text,
+  notes               text,
+  legal_name          text,
+  pib                 text,
+  mb                  text,
+  bank_account        text,
+  bank                text,
+  vat_registered      boolean DEFAULT false,
+  legal_address       text,
+  created_at          timestamptz DEFAULT now(),
+  updated_at          timestamptz DEFAULT now()
+);
+
+ALTER TABLE partners ENABLE ROW LEVEL SECURITY;
+-- Only service role (admin) can access — RLS blocks anon/auth clients
+CREATE POLICY "partners_service_only" ON partners FOR ALL USING (false);
+
+-- =============================================
+-- Security Migration: Drop insecure QR update policy
+-- Run in Supabase > SQL Editor
+-- =============================================
+
+-- Any logged-in user could update ANY QR code status (e.g. disable someone else's pet tag).
+-- QR codes are only updated server-side via service_role (admin API + activation flow).
+DROP POLICY IF EXISTS "qr_update_auth" ON qr_codes;

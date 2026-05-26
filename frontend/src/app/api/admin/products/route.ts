@@ -9,7 +9,8 @@ function revalidateShop() {
 
 function checkPin(req: NextRequest) {
   const pin = req.headers.get('x-admin-pin')
-  const secret = process.env.ADMIN_SECRET || 'petcode2025'
+  const secret = process.env.ADMIN_SECRET
+  if (!secret) return false
   return pin === secret
 }
 
