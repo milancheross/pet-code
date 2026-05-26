@@ -15,10 +15,37 @@ function getEffectivePrice(prod: any) {
   return { regular, salePrice, salePct, display: salePrice ?? regular }
 }
 
+const PRICE_PER_TAG = 1500
+
 const EMPTY_PRODUCT = {
   name: '', description: '', short_description: '',
   regular_price_rsd: '', sale_price_rsd: '', sale_start: '', sale_end: '',
   category_id: '', is_active: true, is_featured: false, is_new: false, in_stock: true, sku: '',
+}
+
+const EMPTY_PARTNER = {
+  name: '', type: 'pet_shop', city: '', address: '', phone: '', email: '',
+  contact_person: '', instagram_followers: '',
+  status: 'nije_kontaktiran', first_contact_date: '', next_contact: '',
+  tags_left: '', commission_percent: '20', rejection_reason: '', notes: '',
+  legal_name: '', pib: '', mb: '', bank_account: '', bank: '',
+  vat_registered: false, legal_address: '',
+}
+
+const PARTNER_STATUS_COLORS: Record<string,string> = {
+  aktivan:          'bg-green-50 text-green-700 border border-green-200',
+  zainteresovan:    'bg-orange-50 text-orange-600 border border-orange-200',
+  kontaktiran:      'bg-blue-50 text-blue-600 border border-blue-200',
+  dogovoreno:       'bg-purple-50 text-purple-600 border border-purple-200',
+  nije_kontaktiran: 'bg-gray-100 text-gray-500 border border-gray-200',
+  odbio:            'bg-red-50 text-red-600 border border-red-200',
+}
+const PARTNER_STATUS_LABELS: Record<string,string> = {
+  aktivan:'Aktivan', zainteresovan:'Zainteresovan', kontaktiran:'Kontaktiran',
+  dogovoreno:'Dogovoreno', nije_kontaktiran:'Nije kontaktiran', odbio:'Odbio',
+}
+const PARTNER_TYPE_LABELS: Record<string,string> = {
+  pet_shop:'Pet shop', veterinar:'Veterinar', frizer:'Frizer', ostalo:'Ostalo',
 }
 
 // ── Shared price-fields block used in both add & edit modals ─────────────
@@ -252,6 +279,17 @@ export default function AdminPage() {
   const [selectedQrIds, setSelectedQrIds] = useState<string[]>([])
   const [qrBulkSaving,  setQrBulkSaving]  = useState(false)
 
+  // CRM
+  const [crm,            setCrm]           = useState<any[]>([])
+  const [crmLoading,     setCrmLoading]    = useState(false)
+  const [crmFilter,      setCrmFilter]     = useState('all')
+  const [crmTypeFilter,  setCrmTypeFilter] = useState('all')
+  const [crmSearch,      setCrmSearch]     = useState('')
+  const [partnerModal,   setPartnerModal]  = useState(false)
+  const [partnerForm,    setPartnerForm]   = useState<any>({ ...EMPTY_PARTNER })
+  const [invoicePartner, setInvoicePartner]= useState<any>(null)
+  const [invAccOpen,     setInvAccOpen]    = useState(false)
+
   // Modals
   const [petPreview,  setPetPreview]  = useState<any>(null)
   const [petEdit,     setPetEdit]     = useState<any>(null)
@@ -429,6 +467,63 @@ export default function AdminPage() {
     a.download = 'petcode-qr.csv'; a.click()
   }
 
+  const loadCrm = async () => {
+    setCrmLoading(true)
+    const res = await adminFetch({ action: 'get_partners' })
+    setCrm(res.partners || [])
+    setCrmLoading(false)
+  }
+
+  const savePartner = async () => {
+    if (!partnerForm.name.trim()) { alert('Unesite naziv partnera'); return }
+    const payload = {
+      ...partnerForm,
+      tags_left: parseInt(partnerForm.tags_left) || 0,
+      commission_percent: parseFloat(partnerForm.commission_percent) || 20,
+      instagram_followers: partnerForm.instagram_followers ? parseInt(partnerForm.instagram_followers) : null,
+      first_contact_date: partnerForm.first_contact_date || null,
+      next_contact: partnerForm.next_contact || null,
+      rejection_reason: partnerForm.rejection_reason || null,
+      notes: partnerForm.notes || null,
+      legal_name: partnerForm.legal_name || null,
+      pib: partnerForm.pib || null,
+      mb: partnerForm.mb || null,
+      bank_account: partnerForm.bank_account || null,
+      bank: partnerForm.bank || null,
+      legal_address: partnerForm.legal_address || null,
+    }
+    await adminFetch({ action: 'save_partner', payload })
+    setPartnerModal(false)
+    setPartnerForm({ ...EMPTY_PARTNER })
+    await loadCrm()
+  }
+
+  const deletePartner = async (id: string) => {
+    if (!confirm('Obrisati partnera? Ova akcija je nepovratna.')) return
+    await adminDelete({ action: 'delete_partner', id })
+    await loadCrm()
+  }
+
+  const exportPartnersCsv = (activeOnly = false) => {
+    const rows = activeOnly ? crm.filter(p => p.status === 'aktivan') : crm
+    const headers = ['Naziv','Tip','Grad','Adresa','Telefon','Email','Kontakt osoba','IG pratioci',
+      'Status','Prvi kontakt','Sledeći kontakt','Privezaka na terenu','Provizija %',
+      'Razlog odbijanja','Beleška',
+      'Pravno ime','PIB','MB','Tekući račun','Banka','PDV obveznik','Adresa sedišta']
+    const csv = [headers.join(','), ...rows.map((p:any) => [
+      p.name, PARTNER_TYPE_LABELS[p.type]||p.type, p.city, p.address, p.phone, p.email,
+      p.contact_person, p.instagram_followers,
+      PARTNER_STATUS_LABELS[p.status]||p.status, p.first_contact_date, p.next_contact,
+      p.tags_left, p.commission_percent, p.rejection_reason, p.notes,
+      p.legal_name, p.pib, p.mb, p.bank_account, p.bank,
+      p.vat_registered ? 'Da' : 'Ne', p.legal_address,
+    ].map(v => `"${String(v??'').replace(/"/g,'""')}"`).join(','))].join('\n')
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(new Blob(['﻿'+csv], { type: 'text/csv;charset=utf-8' }))
+    a.download = activeOnly ? 'crm-aktivni.csv' : 'crm-svi.csv'
+    a.click()
+  }
+
   const updateOrderStatus = async (id: string, status: string) => { await adminFetch({ action: 'update_order', payload: { id, status } }); await load() }
   const updateQrStatus    = async (id: string, status: string) => { await adminFetch({ action: 'update_qr',    payload: { id, status } }); await load() }
   const deleteQr    = async (id: string) => { if (!confirm('Nepovratno?')) return; const r = await adminDelete({ action: 'delete_qr',    id }); if (r.error) alert(r.error); else await load() }
@@ -481,15 +576,15 @@ export default function AdminPage() {
 
         {/* Tabs */}
         <div className="flex gap-2 mb-4 flex-wrap">
-          {(['orders','qr','pets','shop'] as const).map(t2 => (
-            <button key={t2} onClick={() => setTab(t2)}
+          {(['orders','qr','pets','shop','crm'] as const).map(t2 => (
+            <button key={t2} onClick={() => { setTab(t2 as any); if (t2 === 'crm') loadCrm() }}
               className={`px-4 py-2 rounded-full text-sm font-black border-2 transition-all ${tab === t2 ? 'bg-navy border-navy text-white' : 'border-[#e2f0ef] text-gray-400 bg-white'}`}>
-              {t2 === 'orders' ? '📦 Narudžbine' : t2 === 'qr' ? '🔲 QR Kodovi' : t2 === 'pets' ? '🐾 Ljubimci' : '🛍️ Prodavnica'}
+              {t2 === 'orders' ? '📦 Narudžbine' : t2 === 'qr' ? '🔲 QR Kodovi' : t2 === 'pets' ? '🐾 Ljubimci' : t2 === 'shop' ? '🛍️ Prodavnica' : '🤝 CRM'}
             </button>
           ))}
         </div>
 
-        <input className="input mb-4" placeholder="Pretraži..." value={search} onChange={e => setSearch(e.target.value)} />
+        {tab !== 'crm' && <input className="input mb-4" placeholder="Pretraži..." value={search} onChange={e => setSearch(e.target.value)} />}
 
         {/* ── ORDERS ── */}
         {tab === 'orders' && (
@@ -833,6 +928,148 @@ export default function AdminPage() {
             )}
           </div>
         )}
+        {/* ── CRM ── */}
+        {tab === 'crm' && (() => {
+          const today = new Date().toISOString().split('T')[0]
+          const filtered = crm.filter(p => {
+            const matchStatus = crmFilter === 'all' || p.status === crmFilter
+            const matchType   = crmTypeFilter === 'all' || p.type === crmTypeFilter
+            const q = crmSearch.toLowerCase()
+            const matchSearch = !q || p.name?.toLowerCase().includes(q) || p.city?.toLowerCase().includes(q) || p.contact_person?.toLowerCase().includes(q)
+            return matchStatus && matchType && matchSearch
+          })
+          const totalPartners  = crm.length
+          const activePartners = crm.filter(p => p.status === 'aktivan').length
+          const interested     = crm.filter(p => p.status === 'zainteresovan').length
+          const tagsOnField    = crm.filter(p => p.status === 'aktivan').reduce((s:number, p:any) => s + (p.tags_left||0), 0)
+
+          return (
+            <div className="space-y-4">
+              {/* CRM Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { l:'Ukupno partnera',    v: totalPartners,  c:'text-navy' },
+                  { l:'Aktivnih',           v: activePartners, c:'text-green-600' },
+                  { l:'Zainteresovanih',    v: interested,     c:'text-orange-500' },
+                  { l:'Privezaka na terenu',v: tagsOnField,    c:'text-teal' },
+                ].map(s => (
+                  <div key={s.l} className="card text-center py-3">
+                    <div className={`text-2xl font-black ${s.c}`}>{s.v}</div>
+                    <div className="text-[11px] text-gray-400 font-semibold mt-0.5">{s.l}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Filters + actions */}
+              <div className="flex flex-wrap gap-2 items-center">
+                {/* Status filter */}
+                {(['all','aktivan','zainteresovan','kontaktiran','dogovoreno','odbio'] as const).map(f => (
+                  <button key={f} onClick={() => setCrmFilter(f)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-black border-2 transition-all ${crmFilter===f ? 'bg-navy border-navy text-white' : 'border-[#e2f0ef] text-gray-400 bg-white'}`}>
+                    {f==='all' ? 'Svi' : PARTNER_STATUS_LABELS[f]}
+                  </button>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-2 items-center justify-between">
+                <div className="flex gap-2 flex-wrap">
+                  {/* Type filter */}
+                  {(['all','pet_shop','veterinar','frizer','ostalo'] as const).map(f => (
+                    <button key={f} onClick={() => setCrmTypeFilter(f)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all ${crmTypeFilter===f ? 'bg-teal border-teal text-white' : 'border-[#e2f0ef] text-gray-400 bg-white'}`}>
+                      {f==='all' ? 'Svi tipovi' : PARTNER_TYPE_LABELS[f]}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => exportPartnersCsv(false)} className="btn-outline text-xs py-1.5 px-3">📥 Export CSV</button>
+                  <button onClick={() => exportPartnersCsv(true)}  className="btn-outline text-xs py-1.5 px-3">📥 Aktivni</button>
+                  <button onClick={() => { setPartnerForm({ ...EMPTY_PARTNER }); setPartnerModal(true) }}
+                    className="btn-teal text-xs py-1.5 px-3">+ Dodaj partnera</button>
+                </div>
+              </div>
+
+              {/* Search */}
+              <input className="input" placeholder="Pretraži po nazivu, gradu, kontakt osobi..."
+                value={crmSearch} onChange={e => setCrmSearch(e.target.value)} />
+
+              {/* Partner list */}
+              {crmLoading && <div className="card text-center py-8 text-teal animate-pulse font-bold">Učitavanje...</div>}
+              {!crmLoading && filtered.length === 0 && (
+                <div className="card text-center py-10 text-gray-400">
+                  <div className="text-3xl mb-2">🤝</div>
+                  <div className="font-semibold">Nema partnera — dodajte prvog!</div>
+                </div>
+              )}
+              <div className="space-y-3">
+                {filtered.map((p:any) => {
+                  const overdue = p.next_contact && p.next_contact <= today
+                  return (
+                    <div key={p.id} className={`card py-3 px-4 ${overdue ? 'border-l-4 border-l-red-400' : ''}`}>
+                      <div className="flex items-start justify-between gap-3 flex-wrap">
+                        <div className="flex-1 min-w-0">
+                          {/* Row 1: name + badges */}
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <span className="font-black text-navy text-base">{p.name}</span>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#F4F7FA] text-gray-500 border border-[#E2EAF0]">
+                              {PARTNER_TYPE_LABELS[p.type]||p.type}
+                            </span>
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${PARTNER_STATUS_COLORS[p.status]||''}`}>
+                              {PARTNER_STATUS_LABELS[p.status]||p.status}
+                            </span>
+                            {overdue && (
+                              <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-red-500 text-white animate-pulse">
+                                📅 Posetiti danas
+                              </span>
+                            )}
+                          </div>
+                          {/* Row 2: city, contact */}
+                          {(p.city || p.contact_person) && (
+                            <div className="text-xs text-gray-400 font-semibold mb-1">
+                              {[p.city, p.contact_person].filter(Boolean).join(' · ')}
+                            </div>
+                          )}
+                          {/* Row 3: phone + email */}
+                          <div className="flex gap-3 flex-wrap mb-1">
+                            {p.phone && <a href={`tel:${p.phone}`} className="text-xs font-bold text-teal hover:underline">📞 {p.phone}</a>}
+                            {p.email && <a href={`mailto:${p.email}`} className="text-xs font-bold text-blue-500 hover:underline">✉️ {p.email}</a>}
+                          </div>
+                          {/* Row 4: tags + commission */}
+                          <div className="flex gap-3 text-xs text-gray-500 font-semibold mb-1">
+                            <span>🏷️ {p.tags_left||0} privezaka na konsignaciji</span>
+                            <span>💰 {p.commission_percent||20}% provizija</span>
+                          </div>
+                          {/* Row 5: note */}
+                          {p.notes && (
+                            <div className="text-xs text-gray-400 italic">
+                              {p.notes.length > 80 ? p.notes.slice(0,80)+'…' : p.notes}
+                            </div>
+                          )}
+                        </div>
+                        {/* Actions */}
+                        <div className="flex flex-col gap-1.5 items-end flex-shrink-0">
+                          {p.phone && (
+                            <a href={`tel:${p.phone}`} className="text-xs font-black text-white bg-teal px-3 py-1.5 rounded-xl hover:bg-teal/80 transition-colors">
+                              📞 Pozovi
+                            </a>
+                          )}
+                          <button onClick={() => { setPartnerForm({ ...EMPTY_PARTNER, ...p, tags_left: String(p.tags_left||''), commission_percent: String(p.commission_percent||20), instagram_followers: String(p.instagram_followers||'') }); setPartnerModal(true) }}
+                            className="text-xs font-bold text-orange hover:underline">✏️ Uredi</button>
+                          <button onClick={() => deletePartner(p.id)}
+                            className="text-xs font-bold text-red-400 hover:text-red-600">🗑️ Obriši</button>
+                          {p.status === 'aktivan' && (
+                            <button onClick={() => setInvoicePartner(p)}
+                              className="text-xs font-bold text-purple-600 hover:underline">🧾 Faktura</button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })()}
+
       </div>
 
       {/* ════════════ BULK ACTIONS TOOLBAR ════════════ */}
@@ -934,6 +1171,169 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+
+      {/* ── Partner edit/add modal ── */}
+      {partnerModal && (
+        <div className="fixed inset-0 bg-navy/60 z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={() => setPartnerModal(false)}>
+          <div className="bg-white rounded-3xl w-full max-w-2xl my-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#E2EAF0]">
+              <h3 className="font-black text-navy text-lg">{partnerForm.id ? '✏️ Uredi partnera' : '+ Novi partner'}</h3>
+              <button onClick={() => setPartnerModal(false)} className="text-gray-400 hover:text-navy font-bold text-xl">✕</button>
+            </div>
+            <div className="px-6 py-4 space-y-6 max-h-[70vh] overflow-y-auto">
+
+              {/* Osnovni podaci */}
+              <div>
+                <h4 className="font-black text-navy text-sm mb-3 uppercase tracking-widest">Osnovni podaci</h4>
+                <div className="space-y-3">
+                  <div>
+                    <label className="label">Naziv *</label>
+                    <input className="input" value={partnerForm.name} onChange={e => setPartnerForm((p:any)=>({...p,name:e.target.value}))} placeholder="Petshop Šapica" />
+                  </div>
+                  <div>
+                    <label className="label">Tip</label>
+                    <div className="flex gap-2 flex-wrap">
+                      {['pet_shop','veterinar','frizer','ostalo'].map(t => (
+                        <button key={t} type="button" onClick={() => setPartnerForm((p:any)=>({...p,type:t}))}
+                          className={`px-3 py-2 rounded-xl border-2 text-xs font-bold transition-all ${partnerForm.type===t?'border-teal bg-teal/10 text-teal':'border-[#E2EAF0] text-gray-500'}`}>
+                          {PARTNER_TYPE_LABELS[t]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div><label className="label">Grad</label><input className="input" value={partnerForm.city} onChange={e => setPartnerForm((p:any)=>({...p,city:e.target.value}))} placeholder="Beograd" /></div>
+                    <div><label className="label">Adresa</label><input className="input" value={partnerForm.address} onChange={e => setPartnerForm((p:any)=>({...p,address:e.target.value}))} placeholder="Knez Mihailova 1" /></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div><label className="label">Telefon</label><input className="input" type="tel" value={partnerForm.phone} onChange={e => setPartnerForm((p:any)=>({...p,phone:e.target.value}))} /></div>
+                    <div><label className="label">Email</label><input className="input" type="email" value={partnerForm.email} onChange={e => setPartnerForm((p:any)=>({...p,email:e.target.value}))} /></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div><label className="label">Kontakt osoba</label><input className="input" value={partnerForm.contact_person} onChange={e => setPartnerForm((p:any)=>({...p,contact_person:e.target.value}))} placeholder="Marko Petrović" /></div>
+                    <div><label className="label">Instagram pratioci</label><input className="input" type="number" min="0" value={partnerForm.instagram_followers} onChange={e => setPartnerForm((p:any)=>({...p,instagram_followers:e.target.value}))} placeholder="5000" /></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status saradnje */}
+              <div>
+                <h4 className="font-black text-navy text-sm mb-3 uppercase tracking-widest">Status saradnje</h4>
+                <div className="space-y-3">
+                  <div>
+                    <label className="label">Status</label>
+                    <select className="input" value={partnerForm.status} onChange={e => setPartnerForm((p:any)=>({...p,status:e.target.value}))}>
+                      {Object.entries(PARTNER_STATUS_LABELS).map(([v,l]) => <option key={v} value={v}>{l}</option>)}
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div><label className="label">Datum prvog kontakta</label><input className="input" type="date" value={partnerForm.first_contact_date} onChange={e => setPartnerForm((p:any)=>({...p,first_contact_date:e.target.value}))} /></div>
+                    <div><label className="label">Sledeći kontakt</label><input className="input" type="date" value={partnerForm.next_contact} onChange={e => setPartnerForm((p:any)=>({...p,next_contact:e.target.value}))} /></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div><label className="label">Privezaka ostavljeno</label><input className="input" type="number" min="0" value={partnerForm.tags_left} onChange={e => setPartnerForm((p:any)=>({...p,tags_left:e.target.value}))} placeholder="0" /></div>
+                    <div><label className="label">Provizija %</label><input className="input" type="number" min="0" max="100" step="0.5" value={partnerForm.commission_percent} onChange={e => setPartnerForm((p:any)=>({...p,commission_percent:e.target.value}))} placeholder="20" /></div>
+                  </div>
+                  {partnerForm.status === 'odbio' && (
+                    <div><label className="label">Razlog odbijanja</label><textarea className="input resize-none h-16" value={partnerForm.rejection_reason} onChange={e => setPartnerForm((p:any)=>({...p,rejection_reason:e.target.value}))} /></div>
+                  )}
+                  <div><label className="label">Beleške</label><textarea className="input resize-none h-20" value={partnerForm.notes} onChange={e => setPartnerForm((p:any)=>({...p,notes:e.target.value}))} placeholder="Napomene o saradnji..." /></div>
+                </div>
+              </div>
+
+              {/* Podaci za fakturu — accordion */}
+              <div className="border border-[#E2EAF0] rounded-2xl overflow-hidden">
+                <button type="button" onClick={() => setInvAccOpen(p=>!p)}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-[#F4F7FA] hover:bg-[#EBF0F5] transition-colors">
+                  <span className="font-black text-navy text-sm">🧾 Podaci za fakturu</span>
+                  <span className="text-gray-400 font-bold">{invAccOpen ? '▲' : '▼'}</span>
+                </button>
+                {invAccOpen && (
+                  <div className="px-4 py-4 space-y-3">
+                    <div><label className="label">Puno pravno ime firme</label><input className="input" value={partnerForm.legal_name} onChange={e => setPartnerForm((p:any)=>({...p,legal_name:e.target.value}))} /></div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div><label className="label">PIB</label><input className="input" value={partnerForm.pib} onChange={e => setPartnerForm((p:any)=>({...p,pib:e.target.value}))} placeholder="123456789" /></div>
+                      <div><label className="label">Matični broj</label><input className="input" value={partnerForm.mb} onChange={e => setPartnerForm((p:any)=>({...p,mb:e.target.value}))} placeholder="12345678" /></div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div><label className="label">Tekući račun</label><input className="input" value={partnerForm.bank_account} onChange={e => setPartnerForm((p:any)=>({...p,bank_account:e.target.value}))} placeholder="160-123456-12" /></div>
+                      <div><label className="label">Banka</label><input className="input" value={partnerForm.bank} onChange={e => setPartnerForm((p:any)=>({...p,bank:e.target.value}))} placeholder="Raiffeisen" /></div>
+                    </div>
+                    <div><label className="label">Adresa sedišta</label><input className="input" value={partnerForm.legal_address} onChange={e => setPartnerForm((p:any)=>({...p,legal_address:e.target.value}))} /></div>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input type="checkbox" checked={partnerForm.vat_registered} onChange={e => setPartnerForm((p:any)=>({...p,vat_registered:e.target.checked}))} className="w-4 h-4 accent-teal" />
+                      <span className="text-sm font-semibold text-navy">PDV obveznik</span>
+                    </label>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex gap-2 px-6 py-4 border-t border-[#E2EAF0]">
+              <button onClick={savePartner} className="btn-primary flex-1">💾 Sačuvaj</button>
+              <button onClick={() => setPartnerModal(false)} className="btn-outline flex-1">Otkaži</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Invoice modal ── */}
+      {invoicePartner && (() => {
+        const p = invoicePartner
+        const qty = p.tags_left || 0
+        const commission = parseFloat(p.commission_percent) || 20
+        const amount = qty * PRICE_PER_TAG * commission / 100
+        return (
+          <div className="fixed inset-0 bg-navy/60 z-50 flex items-center justify-center p-4" onClick={() => setInvoicePartner(null)}>
+            <div className="bg-white rounded-3xl w-full max-w-md" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#E2EAF0]">
+                <h3 className="font-black text-navy">🧾 Predlog fakture</h3>
+                <button onClick={() => setInvoicePartner(null)} className="text-gray-400 hover:text-navy font-bold text-xl">✕</button>
+              </div>
+              <div id="invoice-print" className="px-6 py-5 space-y-4 text-sm">
+                <div className="text-center mb-2">
+                  <div className="font-black text-navy text-xl">FAKTURA</div>
+                  <div className="text-gray-400 text-xs font-mono mt-1">{new Date().toLocaleDateString('sr-Latn-RS')}</div>
+                </div>
+                <div className="bg-[#F4F7FA] rounded-2xl p-4 space-y-1">
+                  <div className="font-black text-navy">{p.legal_name || p.name}</div>
+                  {p.pib && <div className="text-xs text-gray-500">PIB: {p.pib}</div>}
+                  {p.mb  && <div className="text-xs text-gray-500">MB: {p.mb}</div>}
+                  {(p.legal_address||p.address) && <div className="text-xs text-gray-500">{p.legal_address||p.address}</div>}
+                  {p.vat_registered && <div className="text-xs text-teal font-bold">PDV obveznik</div>}
+                </div>
+                <table className="w-full text-xs border-collapse">
+                  <thead><tr className="bg-navy text-white">
+                    <th className="text-left p-2 rounded-tl-xl">Opis</th>
+                    <th className="text-right p-2">Kom</th>
+                    <th className="text-right p-2">Cena</th>
+                    <th className="text-right p-2 rounded-tr-xl">Iznos</th>
+                  </tr></thead>
+                  <tbody><tr className="border-b border-[#E2EAF0]">
+                    <td className="p-2">PetCode privezak – konsignacija ({commission}% prov.)</td>
+                    <td className="p-2 text-right">{qty}</td>
+                    <td className="p-2 text-right">{PRICE_PER_TAG.toLocaleString()} RSD</td>
+                    <td className="p-2 text-right font-bold">{amount.toLocaleString(undefined,{maximumFractionDigits:2})} RSD</td>
+                  </tr></tbody>
+                </table>
+                <div className="flex justify-between items-center bg-navy text-white rounded-2xl px-4 py-3">
+                  <span className="font-bold">UKUPNO ZA UPLATU</span>
+                  <span className="font-black text-lg">{amount.toLocaleString(undefined,{maximumFractionDigits:2})} RSD</span>
+                </div>
+                {p.bank_account && (
+                  <div className="text-xs text-gray-500 text-center">
+                    Tekući račun: <span className="font-bold text-navy">{p.bank_account}</span>
+                    {p.bank && ` · ${p.bank}`}
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2 px-6 py-4 border-t border-[#E2EAF0]">
+                <button onClick={() => window.print()} className="btn-primary flex-1">🖨️ Štampaj</button>
+                <button onClick={() => setInvoicePartner(null)} className="btn-outline flex-1">Zatvori</button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ── Order preview modal ── */}
       {orderPreview && (

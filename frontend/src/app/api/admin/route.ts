@@ -68,6 +68,36 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true })
   }
 
+  if (action === 'get_partners') {
+    const { data, error } = await sb.from('partners').select('*').order('created_at', { ascending: false })
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    const today = new Date().toISOString().split('T')[0]
+    const sorted = [...(data || [])].sort((a: any, b: any) => {
+      const aOverdue = a.next_contact && a.next_contact <= today
+      const bOverdue = b.next_contact && b.next_contact <= today
+      if (aOverdue && !bOverdue) return -1
+      if (!aOverdue && bOverdue) return 1
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    })
+    return NextResponse.json({ partners: sorted })
+  }
+
+  if (action === 'save_partner') {
+    const { id, ...fields } = payload
+    const data = {
+      ...fields,
+      updated_at: new Date().toISOString(),
+    }
+    if (id) {
+      const { error } = await sb.from('partners').update(data).eq('id', id)
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    } else {
+      const { error } = await sb.from('partners').insert(fields)
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+    return NextResponse.json({ ok: true })
+  }
+
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
 }
 
@@ -96,6 +126,12 @@ export async function DELETE(req: NextRequest) {
 
   if (action === 'delete_order') {
     const { error } = await sb.from('orders').delete().eq('id', id)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ ok: true })
+  }
+
+  if (action === 'delete_partner') {
+    const { error } = await sb.from('partners').delete().eq('id', id)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ ok: true })
   }
