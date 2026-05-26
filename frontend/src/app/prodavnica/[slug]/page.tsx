@@ -4,14 +4,43 @@ import HamburgerNav from '@/components/HamburgerNav'
 import ProductImageGallery from '@/components/ProductImageGallery'
 import ProductActions from '@/components/ProductActions'
 import { createAdminClient } from '@/lib/supabase/server'
-import { unstable_noStore as noStore } from 'next/cache'
 import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
 
-// Always render fresh — no static cache so admin changes appear instantly
-export const dynamic = 'force-dynamic'
+// ISR: revalidate every hour; admin triggers revalidatePath on product changes
+export const revalidate = 3600
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  try {
+    const sb = createAdminClient()
+    const { data } = await sb
+      .from('products')
+      .select('name, description, product_images(url,sort_order)')
+      .eq('slug', params.slug)
+      .eq('is_active', true)
+      .single()
+    if (!data) return { title: 'Prodavnica — PetCode.rs' }
+    const imgs = [...((data as any).product_images || [])].sort((a: any, b: any) => a.sort_order - b.sort_order)
+    const firstImg = (imgs[0] as any)?.url as string | undefined
+    const desc = (data as any).description
+      ? String((data as any).description)
+      : `Kupi ${(data as any).name} na PetCode.rs. Dostava Post Express-om po Srbiji. Plaćanje pouzećem.`
+    return {
+      title: `${(data as any).name} — PetCode.rs`,
+      description: desc,
+      openGraph: {
+        title: String((data as any).name),
+        description: desc,
+        images: firstImg ? [{ url: firstImg }] : [],
+        type: 'website',
+      },
+    }
+  } catch {
+    return { title: 'Prodavnica — PetCode.rs' }
+  }
+}
 
 export default async function ProductPage({ params }: { params: { slug: string } }) {
-  noStore()
   let product: any = null
   let variants: any[] = []
 

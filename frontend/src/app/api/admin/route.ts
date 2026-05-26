@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
+import { randomBytes } from 'crypto'
 
 function checkPin(req: NextRequest) {
   const pin = req.headers.get('x-admin-pin')
-  const secret = process.env.ADMIN_SECRET || 'petcode2025'
+  const secret = process.env.ADMIN_SECRET
+  if (!secret) return false
   return pin === secret
 }
 
@@ -33,7 +35,7 @@ export async function POST(req: NextRequest) {
 
   if (action === 'generate_qr') {
     const codes = Array.from({ length: payload.count }, () => ({
-      code: 'PC-' + Math.random().toString(36).substring(2, 8).toUpperCase()
+      code: 'PC-' + randomBytes(3).toString('hex').toUpperCase()
     }))
     const { error } = await sb.from('qr_codes').insert(codes)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })

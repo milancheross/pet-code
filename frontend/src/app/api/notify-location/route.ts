@@ -11,9 +11,11 @@ export async function POST(req: NextRequest) {
   try {
     const { pet_id, lat, lng, accuracy } = await req.json()
 
-    if (!pet_id || !lat || !lng) {
+    if (!pet_id || lat == null || lng == null || isNaN(Number(lat)) || isNaN(Number(lng))) {
       return NextResponse.json({ error: 'Missing data' }, { status: 400 })
     }
+    const latNum = Number(lat)
+    const lngNum = Number(lng)
 
     const supabase = createAdminClient()
     const { data: pet, error } = await supabase
@@ -26,19 +28,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Pet not found' }, { status: 404 })
     }
 
-    // Pokušaj da dobiješ email iz owners tabele, pa fallback na Supabase Auth
-    let ownerEmail: string | null = (pet.owners as any)?.email || null
-    if (!ownerEmail) {
-      const { data: authUser } = await supabase.auth.admin.getUserById(pet.owner_id)
-      ownerEmail = authUser?.user?.email || null
-    }
-
+    const owners = pet.owners as { name?: string | null; email?: string | null; phone?: string | null } | null
+    const ownerEmail: string | null = owners?.email || null
     const petName = esc(pet.name)
-    const ownerName = esc((pet.owners as any)?.name) || 'Vlasniče'
+    const ownerName = esc(owners?.name) || 'Vlasniče'
 
-    const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`
+    const mapsUrl = `https://www.google.com/maps?q=${latNum},${lngNum}`
     const now = new Date().toLocaleString('sr-Latn-RS', { timeZone: 'Europe/Belgrade' })
-    const accuracyText = accuracy ? `±${Math.round(accuracy)}m` : 'nepoznata preciznost'
+    const accuracyText = accuracy ? `±${Math.round(Number(accuracy))}m` : 'nepoznata preciznost'
 
     await supabase.from('scan_logs').insert({
       pet_id,
@@ -90,8 +87,8 @@ export async function POST(req: NextRequest) {
       <div style="background:#f4f7fa;border:1px solid #e2eaf0;border-radius:12px;padding:16px;margin:20px 0;">
         <div style="font-size:11px;color:#19B6B2;font-family:monospace;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;font-weight:700;">// koordinate</div>
         <div style="font-size:13px;color:#0B1F3B;line-height:2;">
-          <strong>Lat:</strong> ${lat.toFixed(6)}<br/>
-          <strong>Lng:</strong> ${lng.toFixed(6)}<br/>
+          <strong>Lat:</strong> ${latNum.toFixed(6)}<br/>
+          <strong>Lng:</strong> ${lngNum.toFixed(6)}<br/>
           <strong>Preciznost:</strong> ${accuracyText}<br/>
           <strong>Vreme:</strong> ${now}
         </div>
@@ -117,7 +114,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ ok: true, mapsUrl })
-  } catch {
+  } catch (err) {
+    console.error('[notify-location]', err)
     return NextResponse.json({ error: 'Greška pri slanju lokacije' }, { status: 500 })
   }
 }

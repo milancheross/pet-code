@@ -162,3 +162,12 @@ CREATE TABLE IF NOT EXISTS partners (
 ALTER TABLE partners ENABLE ROW LEVEL SECURITY;
 -- Only service role (admin) can access — RLS blocks anon/auth clients
 CREATE POLICY "partners_service_only" ON partners FOR ALL USING (false);
+
+-- =============================================
+-- Security Migration: Drop insecure QR update policy
+-- Run in Supabase > SQL Editor
+-- =============================================
+
+-- Any logged-in user could update ANY QR code status (e.g. disable someone else's pet tag).
+-- QR codes are only updated server-side via service_role (admin API + activation flow).
+DROP POLICY IF EXISTS "qr_update_auth" ON qr_codes;
