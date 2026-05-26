@@ -7,7 +7,7 @@ export interface QrCode {
   created_at: string; activated_at: string | null
 }
 export interface Owner {
-  id: string; name: string | null; phone: string | null; created_at: string
+  id: string; name: string | null; phone: string | null; email: string | null; created_at: string
 }
 export interface Pet {
   id: string; qr_code_id: string; owner_id: string

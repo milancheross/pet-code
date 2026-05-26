@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import type { PetFull } from '@/lib/types'
@@ -7,13 +7,13 @@ import Image from 'next/image'
 import PetClient from './PetClient'
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const sb = createClient()
+  const sb = createAdminClient()
   const { data } = await sb.from('pets').select('name').eq('id', params.id).single()
   return { title: data ? `${data.name} — PetCode.rs` : 'PetCode.rs' }
 }
 
 export default async function PetPage({ params, searchParams }: { params: { id: string }, searchParams: { novi?: string } }) {
-  const sb = createClient()
+  const sb = createAdminClient()
   const { data: pet, error } = await sb
     .from('pets')
     .select('*, qr_codes(*), owners(*), health_records(*)')

@@ -26,9 +26,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Pet not found' }, { status: 404 })
     }
 
-    const ownerEmail = pet.owners?.email || null
+    // Pokušaj da dobiješ email iz owners tabele, pa fallback na Supabase Auth
+    let ownerEmail: string | null = (pet.owners as any)?.email || null
+    if (!ownerEmail) {
+      const { data: authUser } = await supabase.auth.admin.getUserById(pet.owner_id)
+      ownerEmail = authUser?.user?.email || null
+    }
+
     const petName = esc(pet.name)
-    const ownerName = esc(pet.owners?.name) || 'Vlasniče'
+    const ownerName = esc((pet.owners as any)?.name) || 'Vlasniče'
 
     const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`
     const now = new Date().toLocaleString('sr-Latn-RS', { timeZone: 'Europe/Belgrade' })
