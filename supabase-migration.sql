@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS product_images (
 -- Add product fields to orders
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS product_id uuid REFERENCES products(id);
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS variant_id uuid REFERENCES product_variants(id);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS product_slug text;
 
 -- Auto-update updated_at on products
 CREATE OR REPLACE FUNCTION update_updated_at()
