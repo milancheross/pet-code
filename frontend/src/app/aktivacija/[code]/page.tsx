@@ -36,36 +36,52 @@ export default function ActivationPage({ params }: { params: { code: string } })
     try {
       let userId: string
 
-      // 1. Prvo pokušaj prijavu (ako nalog već postoji)
+      // 1. Pokušaj prijavu (postojeći korisnik)
       const { data: loginData, error: loginErr } = await sb.auth.signInWithPassword({ email, password: pass })
 
       if (!loginErr && loginData.user) {
-        // Postojeći korisnik — uspešna prijava
+        // ✅ Uspešna prijava — postojeći korisnik dodaje novog ljubimca
         userId = loginData.user.id
+
       } else {
-        // Nalog ne postoji ili pogrešna lozinka → pokušaj registraciju
-        const { data, error: signUpErr } = await sb.auth.signUp({
+        // Prijava nije uspela — provjeri razlog
+        const loginMsg = loginErr?.message?.toLowerCase() || ''
+
+        if (loginMsg.includes('not confirmed') || loginMsg.includes('email not confirmed')) {
+          throw new Error('Email adresa nije potvrđena. Proverite inbox i kliknite na link za potvrdu registracije.')
+        }
+
+        // Pokušaj registraciju (novi korisnik)
+        const { data: signupData, error: signUpErr } = await sb.auth.signUp({
           email, password: pass, options: { data: { name: oName } }
         })
 
         if (signUpErr) {
-          // Ako nalog postoji ali je lozinka pogrešna
           const msg = signUpErr.message.toLowerCase()
           if (msg.includes('already') || msg.includes('registered') || msg.includes('exists') || msg.includes('taken')) {
-            throw new Error('Nalog već postoji — proverite lozinku i pokušajte ponovo')
+            // Email postoji u Auth, ali je lozinka pogrešna
+            throw new Error('Ovaj email je već registrovan — unesite lozinku s kojom ste se prethodno prijavili. Možete dodati više ljubimaca na isti nalog.')
+          }
+          if (msg.includes('password') && msg.includes('short')) {
+            throw new Error('Lozinka mora imati najmanje 6 karaktera.')
           }
           throw signUpErr
         }
 
-        if (!data.user) throw new Error('Proverite email i potvrdite registraciju, zatim se prijavite')
-        userId = data.user.id
+        // Supabase ponekad vraća user bez identities (email već postoji, anti-enumeration zaštita)
+        if (!signupData?.user || (signupData.user.identities && signupData.user.identities.length === 0)) {
+          throw new Error('Ovaj email je već registrovan — unesite lozinku s kojom ste se prethodno prijavili.')
+        }
+
+        userId = signupData.user.id
       }
 
       // 2. Sačuvaj/ažuriraj vlasnika
-      await sb.from('owners').upsert(
+      const { error: ownerErr } = await sb.from('owners').upsert(
         { id: userId, name: oName, phone: oPhone, email },
         { onConflict: 'id' }
       )
+      if (ownerErr) console.warn('Owner upsert:', ownerErr.message)
 
       setStep('pet')
     } catch(e:any){ setError(e.message) } finally{ setLoading(false) }
@@ -119,6 +135,10 @@ export default function ActivationPage({ params }: { params: { code: string } })
         {step==='auth' && (
           <div className="card space-y-4">
             <h2 className="font-black text-navy">{t('act_step1')}</h2>
+            {/* Hint za korisnike koji već imaju nalog */}
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-700 font-semibold">
+              💡 Već imate nalog? Unesite isti email i lozinku — jedan nalog može imati više ljubimaca.
+            </div>
             <div><label className="label">{t('act_owner_name')}</label><input className="input" value={oName} onChange={e=>setOName(e.target.value)} placeholder="Marko Petrović" /></div>
             <div><label className="label">{t('act_phone')}</label><input className="input" type="tel" value={oPhone} onChange={e=>setOPhone(e.target.value)} placeholder="+381 64 123 456" /></div>
             <div><label className="label">{t('act_email')}</label><input className="input" type="email" value={email} onChange={e=>setEmail(e.target.value)} /></div>
