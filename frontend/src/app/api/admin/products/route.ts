@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import sharp from 'sharp'
 
 function revalidateShop() {
   revalidatePath('/prodavnica')
@@ -97,11 +98,24 @@ export async function POST(req: NextRequest) {
   }
 
   if (action === 'upload_image') {
-    const { product_id, filename, base64, mime_type } = payload
-    const bytes = Buffer.from(base64, 'base64')
-    const path = `${product_id}/${filename}`
-    const { error: uploadError } = await sb.storage.from('product-images').upload(path, bytes, {
-      contentType: mime_type,
+    const { product_id, filename, base64 } = payload
+    const raw = Buffer.from(base64, 'base64')
+
+    // ── Sharp compression ──────────────────────────────────────────────────────
+    // - Max 1400×1400 (product gallery; full-bleed on mobile is ~430px)
+    // - WebP quality 82 + effort 5: excellent quality, ~50–60% smaller than
+    //   canvas-encoded WebP at 0.90
+    // - EXIF stripped automatically by sharp
+    const compressed = await sharp(raw)
+      .resize(1400, 1400, { fit: 'inside', withoutEnlargement: true })
+      .webp({ quality: 82, effort: 5, smartSubsample: true })
+      .toBuffer()
+
+    // Always store as .webp regardless of original extension
+    const webpFilename = filename.replace(/\.[^.]+$/, '') + '.webp'
+    const path = `${product_id}/${webpFilename}`
+    const { error: uploadError } = await sb.storage.from('product-images').upload(path, compressed, {
+      contentType: 'image/webp',
       upsert: true,
     })
     if (uploadError) return NextResponse.json({ error: uploadError.message }, { status: 500 })

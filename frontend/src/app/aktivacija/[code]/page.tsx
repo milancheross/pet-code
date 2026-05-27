@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/lib/i18n/LangContext'
 import LangSwitcher from '@/components/LangSwitcher'
 import type { Species } from '@/lib/types'
-import { convertToWebP, formatBytes } from '@/lib/imageUtils'
+import { formatBytes } from '@/lib/imageUtils'
 
 const SPECIES: {v: Species, k: any}[] = [
   {v:'pas',k:'sp_pas'},{v:'macka',k:'sp_macka'},{v:'zec',k:'sp_zec'},{v:'ptica',k:'sp_ptica'},{v:'ostalo',k:'sp_ostalo'}
@@ -28,19 +28,12 @@ export default function ActivationPage({ params }: { params: { code: string } })
   const [vacc,setVacc]=useState<boolean|null>(null); const [allergy,setAllergy]=useState('')
   const [med,setMed]=useState(''); const [vet,setVet]=useState(''); const [note,setNote]=useState('')
 
-  const onPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]; if(!f) return
-    const allowed = ['image/jpeg','image/png','image/webp','image/heic','image/heif']
-    if (!allowed.includes(f.type)) { setError('Dozvoljeni formati: JPG, PNG, WebP'); return }
     if (f.size > 20 * 1024 * 1024) { setError('Slika ne sme biti veća od 20MB'); return }
-    setError(''); setConverting(true); setConvertInfo(''); setPreview(URL.createObjectURL(f))
-    try {
-      const { file: webpFile, originalSize, newSize } = await convertToWebP(f, { maxWidth: 1200, maxHeight: 1200, quality: 0.85 })
-      setPhoto(webpFile)
-      setConvertInfo(`✅ ${formatBytes(originalSize)} → ${formatBytes(newSize)}`)
-    } catch {
-      setPhoto(f) // fallback na original
-    } finally { setConverting(false) }
+    setError(''); setPreview(URL.createObjectURL(f))
+    setPhoto(f)
+    setConvertInfo(`📷 ${formatBytes(f.size)} — optimizacija na serveru`)
   }
 
   const doAuth = async () => {
@@ -108,10 +101,16 @@ export default function ActivationPage({ params }: { params: { code: string } })
       if(!qr||qr.status!=='unused') throw new Error('QR kod je već iskorišćen ili ne postoji')
       let photoUrl=null
       if(photo){
-        const path=`pets/${qr.id}.webp`
-        await sb.storage.from('pet-photos').upload(path,photo,{upsert:true,contentType:'image/webp'})
-        const {data:u}=sb.storage.from('pet-photos').getPublicUrl(path)
-        photoUrl=u.publicUrl
+        setConverting(true); setConvertInfo('Optimizujem sliku...')
+        const fd = new FormData()
+        fd.append('file', photo)
+        fd.append('pet_id', qr.id)
+        const photoRes = await fetch('/api/upload-pet-photo', { method: 'POST', body: fd })
+        setConverting(false)
+        if (!photoRes.ok) throw new Error('Greška pri uploadu slike')
+        const photoData = await photoRes.json()
+        photoUrl = photoData.url
+        setConvertInfo(`✅ ${formatBytes(photoData.originalSize)} → ${formatBytes(photoData.newSize)}`)
       }
       const {data:pet,error:pe}=await sb.from('pets').insert({
         qr_code_id:qr.id,owner_id:user.id,name,species,

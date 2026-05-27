@@ -1,3 +1,12 @@
+/**
+ * Client-side image utilities.
+ *
+ * NOTE: Actual compression for storage happens server-side via sharp
+ * (/api/upload-pet-photo, /api/admin/products upload_image).
+ * This helper is used only for admin upload pre-processing (reduces
+ * base64 payload size before sending) and client-side previews.
+ */
+
 export async function convertToWebP(
   file: File,
   options: {
@@ -6,7 +15,7 @@ export async function convertToWebP(
     quality?: number
   } = {}
 ): Promise<{ file: File; originalSize: number; newSize: number }> {
-  const { maxWidth = 1000, maxHeight = 1000, quality = 0.85 } = options
+  const { maxWidth = 1000, maxHeight = 1000, quality = 0.82 } = options
   return new Promise((resolve, reject) => {
     const originalSize = file.size
     const img = new window.Image()
@@ -15,7 +24,6 @@ export async function convertToWebP(
       URL.revokeObjectURL(url)
       const canvas = document.createElement('canvas')
       let { width, height } = img
-      // Proporcionalno smanjenje
       if (width > maxWidth || height > maxHeight) {
         const ratio = Math.min(maxWidth / width, maxHeight / height)
         width = Math.round(width * ratio)

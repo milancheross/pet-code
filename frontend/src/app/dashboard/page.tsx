@@ -6,7 +6,7 @@ import { useLang } from '@/lib/i18n/LangContext'
 import LangSwitcher from '@/components/LangSwitcher'
 import Image from 'next/image'
 import type { Pet, HealthRecord } from '@/lib/types'
-import { convertToWebP, formatBytes } from '@/lib/imageUtils'
+import { formatBytes } from '@/lib/imageUtils'
 
 export default function DashboardPage() {
   const sb = createClient(); const router = useRouter(); const { t } = useLang()
@@ -60,29 +60,29 @@ export default function DashboardPage() {
     setRecords(data||[])
   }
 
-  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]; if(!f) return
-    const allowed = ['image/jpeg','image/png','image/webp','image/heic','image/heif']
-    if (!allowed.includes(f.type)) { setPhotoError('Dozvoljeni formati: JPG, PNG, WebP'); return }
     if (f.size > 20 * 1024 * 1024) { setPhotoError('Slika ne sme biti veća od 20MB'); return }
-    setPhotoError(''); setConverting(true); setConvertInfo(''); setPhotoPreview(URL.createObjectURL(f))
-    try {
-      const { file: webpFile, originalSize, newSize } = await convertToWebP(f, { maxWidth: 1200, maxHeight: 1200, quality: 0.85 })
-      setNewPhoto(webpFile)
-      setConvertInfo(`✅ ${formatBytes(originalSize)} → ${formatBytes(newSize)}`)
-    } catch {
-      setNewPhoto(f)
-    } finally { setConverting(false) }
+    setPhotoError(''); setPhotoPreview(URL.createObjectURL(f))
+    setNewPhoto(f)
+    setConvertInfo(`📷 ${formatBytes(f.size)} — optimizacija na serveru`)
   }
 
   const save = async () => {
     if (!pet) return; setSaving(true)
     let photoUrl = pet.photo_url
     if (newPhoto && pet.qr_code_id) {
-      const path = `pets/${pet.qr_code_id}.webp`
-      await sb.storage.from('pet-photos').upload(path, newPhoto, { upsert: true, contentType: 'image/webp' })
-      const { data: u } = sb.storage.from('pet-photos').getPublicUrl(path)
-      photoUrl = u.publicUrl
+      setConverting(true); setConvertInfo('Optimizujem sliku...')
+      const fd = new FormData()
+      fd.append('file', newPhoto)
+      fd.append('pet_id', pet.qr_code_id)
+      const photoRes = await fetch('/api/upload-pet-photo', { method: 'POST', body: fd })
+      setConverting(false)
+      if (photoRes.ok) {
+        const photoData = await photoRes.json()
+        photoUrl = photoData.url
+        setConvertInfo(`✅ ${formatBytes(photoData.originalSize)} → ${formatBytes(photoData.newSize)}`)
+      }
     }
     await sb.from('pets').update({ color:color||null, age:age||null, microchip:chip||null, vaccinated:vacc, allergies:allergy||null, medication:med||null, vet_info:vet||null, note:note||null, is_lost: lost, ...(photoUrl !== pet.photo_url ? { photo_url: photoUrl } : {}) }).eq('id', pet.id)
     if (photoUrl !== pet.photo_url) setPet(p => p ? { ...p, photo_url: photoUrl } : p)
