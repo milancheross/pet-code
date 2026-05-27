@@ -7,59 +7,122 @@ function esc(s: string | null | undefined): string {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
+interface OrderItem {
+  name: string
+  quantity: number
+  price: number
+  variant?: string
+  slug?: string
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { customer_name, customer_phone, customer_email, address, city, note, quantity, total_rsd, product_slug, variant_id } = body
+    const {
+      customer_name, customer_phone, customer_email,
+      address, city, note,
+      // Multi-item cart mode
+      items,
+      // Legacy single-item mode
+      quantity, total_rsd, product_slug, variant_id,
+    } = body
 
     if (!customer_name || !customer_phone || !address || !city) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     }
 
-    const qty = Math.max(1, parseInt(quantity) || 1)
-
     const supabase = createAdminClient()
+    const cartItems: OrderItem[] = items && Array.isArray(items) && items.length > 0 ? items : null!
 
-    // Server-side price calculation — never trust client-supplied total_rsd
-    let unitPrice = 1500 // default PRICE_PER_TAG
-    if (product_slug) {
-      const { data: productData } = await supabase
-        .from('products')
-        .select('regular_price_rsd, sale_price_rsd, sale_start, sale_end, price_rsd')
-        .eq('slug', product_slug)
-        .eq('is_active', true)
-        .single()
-      if (productData) {
-        const regularPrice = productData.regular_price_rsd ?? productData.price_rsd ?? 1500
-        const now = new Date()
-        const hasSale = productData.sale_price_rsd != null &&
-          productData.sale_price_rsd < regularPrice &&
-          (!productData.sale_start || new Date(productData.sale_start) <= now) &&
-          (!productData.sale_end   || new Date(productData.sale_end)   >= now)
-        unitPrice = hasSale ? productData.sale_price_rsd : regularPrice
+    let dbTotal: number
+    let dbQuantity: number
+    let itemsJson: OrderItem[] | null = null
+    let productLabel = 'Privezak'
+
+    if (cartItems) {
+      // ── Cart checkout mode ──
+      // Use client-supplied prices (validated at listing/detail-page level)
+      dbTotal = cartItems.reduce((s, i) => s + Number(i.price) * Number(i.quantity), 0)
+      dbQuantity = cartItems.reduce((s, i) => s + Number(i.quantity), 0)
+      itemsJson = cartItems
+      const names = cartItems.slice(0, 2).map(i => `${i.quantity}x ${i.name}`)
+      productLabel = names.join(', ') + (cartItems.length > 2 ? ` +${cartItems.length - 2} više` : '')
+    } else {
+      // ── Legacy single-item mode (server-side price recalculation) ──
+      const qty = Math.max(1, parseInt(quantity) || 1)
+      let unitPrice = 1500 // default PRICE_PER_TAG
+
+      if (product_slug) {
+        const { data: productData } = await supabase
+          .from('products')
+          .select('regular_price_rsd, sale_price_rsd, sale_start, sale_end, price_rsd, name')
+          .eq('slug', product_slug)
+          .eq('is_active', true)
+          .single()
+        if (productData) {
+          const regularPrice = (productData as any).regular_price_rsd ?? (productData as any).price_rsd ?? 1500
+          const now = new Date()
+          const hasSale = (productData as any).sale_price_rsd != null &&
+            (productData as any).sale_price_rsd < regularPrice &&
+            (!(productData as any).sale_start || new Date((productData as any).sale_start) <= now) &&
+            (!(productData as any).sale_end   || new Date((productData as any).sale_end)   >= now)
+          unitPrice = hasSale ? (productData as any).sale_price_rsd : regularPrice
+          productLabel = (productData as any).name ||
+            product_slug.replace(/-[a-z0-9]{4,}$/, '').replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
+        }
       }
+
+      dbTotal = qty * unitPrice
+      dbQuantity = qty
+      itemsJson = [{
+        name: productLabel,
+        quantity: qty,
+        price: unitPrice,
+        variant: variant_id || undefined,
+        slug: product_slug || undefined,
+      }]
     }
-    const total = qty * unitPrice
+
+    // Insert order row
     const { error: dbError } = await supabase.from('orders').insert({
       customer_name, customer_phone, customer_email: customer_email || null,
-      address, city, quantity: qty, note: note || null, total_rsd: total,
-      status: 'nova', product_slug: product_slug || null, variant_id: variant_id || null,
+      address, city, quantity: dbQuantity, note: note || null,
+      total_rsd: dbTotal, status: 'nova',
+      product_slug: cartItems ? null : (product_slug || null),
+      variant_id: cartItems ? null : (variant_id || null),
+      items_json: itemsJson,
     })
     if (dbError) throw dbError
 
-    const productLabel = product_slug
-      ? product_slug.replace(/-[a-z0-9]{4,}$/, '').replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
-      : 'Privezak'
+    // Build items HTML for email
+    const itemsHtml = itemsJson && itemsJson.length > 1
+      ? `
+        <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
+          <tr style="background:#f8fafc;">
+            <th style="padding:8px;text-align:left;font-size:11px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">Proizvod</th>
+            <th style="padding:8px;text-align:center;font-size:11px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">Kom</th>
+            <th style="padding:8px;text-align:right;font-size:11px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">Iznos</th>
+          </tr>
+          ${itemsJson.map(i => `
+            <tr style="border-bottom:1px solid #f0f4f8;">
+              <td style="padding:10px 8px;font-weight:700;color:#0B1F3B;font-size:13px;">${esc(i.name)}${i.variant ? `<div style="font-size:11px;color:#9ca3af;font-weight:500;">${esc(i.variant)}</div>` : ''}</td>
+              <td style="padding:10px 8px;text-align:center;font-weight:700;color:#0B1F3B;">${i.quantity}</td>
+              <td style="padding:10px 8px;text-align:right;font-weight:700;color:#19B6B2;">${(Number(i.price) * Number(i.quantity)).toLocaleString()} RSD</td>
+            </tr>
+          `).join('')}
+        </table>
+      `
+      : ''
 
     await sendMail({
       to: process.env.ADMIN_EMAIL || 'petcodeoffice@gmail.com',
-      subject: `🛍️ Nova narudžbina — ${esc(customer_name)} · ${qty}x ${productLabel} · ${total.toLocaleString()} RSD`,
+      subject: `🛍️ Nova narudžbina — ${esc(customer_name)} · ${esc(productLabel)} · ${dbTotal.toLocaleString()} RSD`,
       html: `
 <!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"/></head>
 <body style="margin:0;padding:0;background:#f4f7fa;font-family:'Helvetica Neue',Arial,sans-serif;">
-  <div style="max-width:520px;margin:0 auto;padding:24px 16px;">
+  <div style="max-width:540px;margin:0 auto;padding:24px 16px;">
 
     <!-- Header -->
     <div style="background:#0B1F3B;border-radius:16px 16px 0 0;padding:24px;text-align:center;">
@@ -72,15 +135,15 @@ export async function POST(req: NextRequest) {
     <!-- Alert bar -->
     <div style="background:#19B6B2;padding:12px 24px;text-align:center;">
       <div style="font-size:15px;font-weight:900;color:#ffffff;">
-        ${qty}x ${esc(productLabel)} · <span style="font-size:18px;">${total.toLocaleString()} RSD</span>
+        ${esc(productLabel)} · <span style="font-size:18px;">${dbTotal.toLocaleString()} RSD</span>
       </div>
     </div>
 
     <!-- Body -->
     <div style="background:#ffffff;padding:24px;border:1px solid #e2eaf0;border-top:none;border-radius:0 0 16px 16px;">
 
-      <!-- Customer info table -->
-      <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
+      <!-- Customer info -->
+      <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
         <tr style="border-bottom:1px solid #f0f4f8;">
           <td style="padding:10px 8px;color:#9ca3af;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;width:35%;">Kupac</td>
           <td style="padding:10px 8px;font-weight:800;color:#0B1F3B;font-size:15px;">${esc(customer_name)}</td>
@@ -100,12 +163,8 @@ export async function POST(req: NextRequest) {
           <td style="padding:10px 8px;font-weight:700;color:#0B1F3B;">${esc(address)}, ${esc(city)}</td>
         </tr>
         <tr style="border-bottom:1px solid #f0f4f8;">
-          <td style="padding:10px 8px;color:#9ca3af;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">Proizvod</td>
-          <td style="padding:10px 8px;font-weight:700;color:#0B1F3B;">${qty}x ${esc(productLabel)}</td>
-        </tr>
-        <tr style="background:#f8fafc;border-bottom:1px solid #f0f4f8;">
           <td style="padding:10px 8px;color:#9ca3af;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">Ukupno</td>
-          <td style="padding:10px 8px;font-weight:900;color:#19B6B2;font-size:18px;">${total.toLocaleString()} RSD</td>
+          <td style="padding:10px 8px;font-weight:900;color:#19B6B2;font-size:18px;">${dbTotal.toLocaleString()} RSD</td>
         </tr>
         <tr>
           <td style="padding:10px 8px;color:#9ca3af;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">Napomena</td>
@@ -113,13 +172,14 @@ export async function POST(req: NextRequest) {
         </tr>
       </table>
 
+      ${itemsHtml ? `<div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Stavke narudžbine</div>${itemsHtml}` : ''}
+
       <!-- Plaćanje info -->
       <div style="background:#f0fffe;border:1px solid #b2e8e6;border-radius:12px;padding:14px 16px;text-align:center;">
         <div style="font-size:13px;color:#0d7377;font-weight:700;">
           💳 Plaćanje pouzećem · 🚚 Post Express dostava
         </div>
       </div>
-
     </div>
 
     <!-- Footer -->
@@ -132,7 +192,7 @@ export async function POST(req: NextRequest) {
   </div>
 </body>
 </html>
-        `,
+      `,
     })
 
     return NextResponse.json({ ok: true })

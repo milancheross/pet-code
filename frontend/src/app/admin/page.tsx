@@ -1357,19 +1357,39 @@ export default function AdminPage() {
       {/* ── Order preview modal ── */}
       {orderPreview && (
         <div className="fixed inset-0 bg-navy/60 z-50 flex items-center justify-center p-4" onClick={() => setOrderPreview(null)}>
-          <div className="bg-white rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-3xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-black text-navy">Narudžbina #{orderPreview.id?.slice(-8)}</h3>
               <button onClick={() => setOrderPreview(null)} className="text-gray-400 hover:text-navy font-bold text-xl">✕</button>
             </div>
             <div className="space-y-2 text-sm">
-              {[['Kupac', orderPreview.customer_name],['Telefon', orderPreview.customer_phone],['Email', orderPreview.customer_email||'—'],['Adresa', `${orderPreview.address}, ${orderPreview.city}`],['Količina', `${orderPreview.quantity}x`],['Ukupno', `${orderPreview.total_rsd} RSD`],['Status', orderPreview.status],['Napomena', orderPreview.note||'—'],['Datum', new Date(orderPreview.created_at).toLocaleString('sr')]].map(([l,v]) => (
+              {[['Kupac', orderPreview.customer_name],['Telefon', orderPreview.customer_phone],['Email', orderPreview.customer_email||'—'],['Adresa', `${orderPreview.address}, ${orderPreview.city}`],['Ukupno', `${orderPreview.total_rsd?.toLocaleString()} RSD`],['Status', orderPreview.status],['Napomena', orderPreview.note||'—'],['Datum', new Date(orderPreview.created_at).toLocaleString('sr')]].map(([l,v]) => (
                 <div key={l as string} className="flex justify-between py-1.5 border-b border-[#E2EAF0]">
                   <span className="text-gray-400 font-semibold">{l}</span>
-                  <span className="font-bold text-navy text-right">{v}</span>
+                  <span className="font-bold text-navy text-right max-w-[60%] break-words">{v}</span>
                 </div>
               ))}
             </div>
+            {/* items_json — cart orders */}
+            {orderPreview.items_json && Array.isArray(orderPreview.items_json) && orderPreview.items_json.length > 0 && (
+              <div className="mt-4">
+                <div className="text-xs font-extrabold text-teal uppercase tracking-widest mb-2">Stavke</div>
+                <div className="space-y-1.5">
+                  {orderPreview.items_json.map((item: any, idx: number) => (
+                    <div key={idx} className="flex items-center justify-between bg-[#F8FAFB] rounded-xl px-3 py-2 text-sm">
+                      <div>
+                        <div className="font-bold text-navy">{item.name}</div>
+                        {item.variant && <div className="text-xs text-gray-400">{item.variant}</div>}
+                      </div>
+                      <div className="text-right flex-shrink-0 ml-3">
+                        <div className="text-xs text-gray-400">{item.quantity}x {Number(item.price).toLocaleString()}</div>
+                        <div className="font-bold text-teal text-sm">{(Number(item.price) * Number(item.quantity)).toLocaleString()} RSD</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <button onClick={() => setOrderPreview(null)} className="btn-outline block text-center mt-4 w-full text-sm">Zatvori</button>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import PetCodeLogo from '@/components/PetCodeLogo'
 import HamburgerNav from '@/components/HamburgerNav'
+import CartIconButton from '@/components/CartIconButton'
 import ProductImageGallery from '@/components/ProductImageGallery'
 import ProductActions from '@/components/ProductActions'
 import { createAdminClient } from '@/lib/supabase/server'
@@ -87,7 +88,8 @@ export default async function ProductPage({ params }: { params: { slug: string }
     <div className="min-h-screen bg-[#F4F7FA]">
       <nav className="bg-white border-b border-[#E2EAF0] px-5 py-3.5 flex items-center justify-between sticky top-0 z-50">
         <Link href="/"><PetCodeLogo size="sm" /></Link>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <CartIconButton />
           <Link href="/naruci" className="hidden sm:block btn-primary text-sm px-5 py-2.5">Naruči</Link>
           <HamburgerNav />
         </div>
@@ -173,7 +175,10 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
             {/* Variants + Quantity + CTA (all interactive, client component) */}
             <ProductActions
+              productId={product.id}
               productSlug={product.slug}
+              productName={product.name}
+              productImage={mainImg?.url}
               inStock={product.in_stock !== false}
               priceRsd={effectivePrice}
               variantsByType={variantsByType}

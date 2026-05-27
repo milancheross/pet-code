@@ -3,6 +3,8 @@ import { Manrope } from 'next/font/google'
 import './globals.css'
 import { LangProvider } from '@/lib/i18n/LangContext'
 import { Analytics } from '@vercel/analytics/next'
+import { CartProvider } from '@/lib/cartStore'
+import CartDrawer from '@/components/CartDrawer'
 
 const manrope = Manrope({ subsets: ['latin'], weight: ['400','500','600','700','800'], variable: '--font-manrope' })
 
@@ -25,7 +27,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="sr">
       <body className={`${manrope.variable} font-sans antialiased`}>
-        <LangProvider>{children}</LangProvider>
+        <LangProvider>
+          <CartProvider>
+            {children}
+            <CartDrawer />
+          </CartProvider>
+        </LangProvider>
         <Analytics />
       </body>
     </html>

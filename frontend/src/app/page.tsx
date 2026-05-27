@@ -3,6 +3,7 @@ import { useLang } from '@/lib/i18n/LangContext'
 import LangSwitcher from '@/components/LangSwitcher'
 import PetCodeLogo from '@/components/PetCodeLogo'
 import HamburgerNav from '@/components/HamburgerNav'
+import CartIconButton from '@/components/CartIconButton'
 import Link from 'next/link'
 import { useState } from 'react'
 import { PRICE_PER_TAG } from '@/lib/types'
@@ -34,9 +35,10 @@ export default function HomePage() {
             <Link href="/login"      className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">{t('nav_login')}</Link>
           </div>
 
-          {/* Right side: lang + order btn + hamburger */}
-          <div className="flex items-center" style={{ gap: 12 }}>
+          {/* Right side: lang + cart + order btn + hamburger */}
+          <div className="flex items-center" style={{ gap: 8 }}>
             <LangSwitcher />
+            <CartIconButton />
             <Link href="/naruci" className="hidden sm:block btn-primary text-sm px-5 py-2.5">{t('nav_order')}</Link>
             <HamburgerNav />
           </div>
