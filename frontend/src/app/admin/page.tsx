@@ -21,6 +21,7 @@ const EMPTY_PRODUCT = {
   name: '', description: '', short_description: '',
   regular_price_rsd: '', sale_price_rsd: '', sale_start: '', sale_end: '',
   category_id: '', is_active: true, is_featured: false, is_new: false, in_stock: true, sku: '',
+  meta_title: '', meta_description: '', keywords: '',
 }
 
 const EMPTY_PARTNER = {
@@ -380,6 +381,10 @@ export default function AdminPage() {
       is_new: !!prod.is_new,
       in_stock: prod.in_stock !== false,
       sku: prod.sku || '',
+      slug: prod.slug || '',
+      meta_title: prod.meta_title || '',
+      meta_description: prod.meta_description || '',
+      keywords: prod.keywords || '',
     })
     setEditImages([...(prod.product_images || [])].sort((a: any, b: any) => a.sort_order - b.sort_order))
     setEditDeletedImageIds([])
@@ -408,6 +413,10 @@ export default function AdminPage() {
       is_new: editForm.is_new,
       in_stock: editForm.in_stock,
       sku: editForm.sku || null,
+      slug: editForm.slug || undefined,
+      meta_title: editForm.meta_title || null,
+      meta_description: editForm.meta_description || null,
+      keywords: editForm.keywords || null,
     }
     const res = await adminFetchProducts({ action: 'update_product', payload })
     if (res.error) { alert('Greška: ' + res.error); return }
@@ -885,6 +894,15 @@ export default function AdminPage() {
                       </div>
                     </div>
                     <StatusChecks form={newProduct} setForm={setNewProduct as any} />
+                    {/* SEO */}
+                    <div className="border-t border-[#E2EAF0] pt-3">
+                      <div className="text-xs font-extrabold text-teal uppercase tracking-widest mb-2">🔍 SEO</div>
+                      <div className="space-y-2">
+                        <div><label className="label">Meta naslov</label><input className="input" value={newProduct.meta_title} onChange={e => setNewProduct(p => ({...p, meta_title: e.target.value}))} placeholder="npr. QR Privezak za Pse — PetCode.rs" /></div>
+                        <div><label className="label">Meta opis</label><textarea className="input resize-none h-16 text-xs" value={newProduct.meta_description} onChange={e => setNewProduct(p => ({...p, meta_description: e.target.value}))} placeholder="Kratki opis za Google (150–160 znakova)..." /></div>
+                        <div><label className="label">Ključne reči</label><input className="input" value={newProduct.keywords} onChange={e => setNewProduct(p => ({...p, keywords: e.target.value}))} placeholder="qr privezak, pet qr code tag, privezak za pse" /></div>
+                      </div>
+                    </div>
                     <VariantsSection existing={[]} deletedIds={[]} onDeleteExisting={() => {}} newOnes={newVariants} setNewOnes={setNewVariants} />
                     <input ref={newFileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleNewFileChange} />
                     <ImageSection existingImages={[]} deletedIds={[]} onDeleteExisting={() => {}} newImages={newImages} onDeleteNew={i => setNewImages(p => p.filter((_, j) => j !== i))} uploading={newUploading} fileRef={newFileRef} onFilePick={() => newFileRef.current?.click()} convertInfo={newConvertInfo} />
@@ -933,6 +951,16 @@ export default function AdminPage() {
                       </div>
                     </div>
                     <StatusChecks form={editForm} setForm={setEditForm} />
+                    {/* SEO */}
+                    <div className="border-t border-[#E2EAF0] pt-3">
+                      <div className="text-xs font-extrabold text-teal uppercase tracking-widest mb-2">🔍 SEO</div>
+                      <div className="space-y-2">
+                        <div><label className="label">URL slug</label><input className="input font-mono text-xs" value={editForm.slug} onChange={e => setEditForm((p: any) => ({...p, slug: e.target.value.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'')}))} placeholder="auto-generisan" /></div>
+                        <div><label className="label">Meta naslov</label><input className="input" value={editForm.meta_title} onChange={e => setEditForm((p: any) => ({...p, meta_title: e.target.value}))} placeholder="npr. PetCode QR Tag — Privezak za Ljubimce" /></div>
+                        <div><label className="label">Meta opis</label><textarea className="input resize-none h-16 text-xs" value={editForm.meta_description} onChange={e => setEditForm((p: any) => ({...p, meta_description: e.target.value}))} placeholder="Kratki opis za Google (150–160 znakova)..." /></div>
+                        <div><label className="label">Ključne reči</label><input className="input" value={editForm.keywords} onChange={e => setEditForm((p: any) => ({...p, keywords: e.target.value}))} placeholder="qr privezak, pet qr code tag, privezak za pse srbija" /></div>
+                      </div>
+                    </div>
                     <VariantsSection existing={editVariants} deletedIds={editDeletedVariantIds} onDeleteExisting={id => setEditDeletedVariantIds(p => [...p, id])} newOnes={editNewVariants} setNewOnes={setEditNewVariants} />
                     <input ref={editFileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleEditFileChange} />
                     <ImageSection existingImages={editImages} deletedIds={editDeletedImageIds} onDeleteExisting={id => setEditDeletedImageIds(p => [...p, id])} newImages={editNewImages} onDeleteNew={i => setEditNewImages(p => p.filter((_, j) => j !== i))} uploading={editUploading} fileRef={editFileRef} onFilePick={() => editFileRef.current?.click()} convertInfo={editConvertInfo} />

@@ -16,19 +16,24 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     const sb = createAdminClient()
     const { data } = await sb
       .from('products')
-      .select('name, description, product_images(url,sort_order)')
+      .select('name, description, meta_title, meta_description, keywords, product_images(url,sort_order)')
       .eq('slug', params.slug)
       .eq('is_active', true)
       .single()
     if (!data) return { title: 'Prodavnica — PetCode.rs' }
     const imgs = [...((data as any).product_images || [])].sort((a: any, b: any) => a.sort_order - b.sort_order)
     const firstImg = (imgs[0] as any)?.url as string | undefined
-    const desc = (data as any).description
-      ? String((data as any).description)
-      : `Kupi ${(data as any).name} na PetCode.rs. Dostava Post Express-om po Srbiji. Plaćanje pouzećem.`
+    const desc = (data as any).meta_description
+      || ((data as any).description
+        ? String((data as any).description)
+        : `Kupi ${(data as any).name} na PetCode.rs. QR privezak za kućne ljubimce — nerđajući čelik, doživotni profil. Dostava Post Express-om. Plaćanje pouzećem.`)
+    const title = (data as any).meta_title
+      ? String((data as any).meta_title)
+      : `${(data as any).name} — PetCode.rs`
     return {
-      title: `${(data as any).name} — PetCode.rs`,
+      title,
       description: desc,
+      keywords: (data as any).keywords || 'qr privezak, qr tag ljubimac srbija, pet qr code tag, privezak za pse',
       openGraph: {
         title: String((data as any).name),
         description: desc,
