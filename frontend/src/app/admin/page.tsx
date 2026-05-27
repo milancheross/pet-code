@@ -102,26 +102,41 @@ async function uploadFiles(
   files: FileList,
   adminFetchProducts: (b: object) => Promise<any>,
   productId: string,
+  onConvertInfo?: (info: string) => void,
 ): Promise<{ url: string; preview: string }[]> {
+  const { convertToWebP, formatBytes } = await import('@/lib/imageUtils')
   const result: { url: string; preview: string }[] = []
+  let totalOriginal = 0; let totalNew = 0
   for (const file of Array.from(files)) {
     const preview = URL.createObjectURL(file)
     try {
+      // Convert to WebP before upload
+      let uploadFile = file
+      try {
+        const converted = await convertToWebP(file, { maxWidth: 1600, maxHeight: 1600, quality: 0.90 })
+        uploadFile = converted.file
+        totalOriginal += converted.originalSize
+        totalNew += converted.newSize
+      } catch { /* fallback to original */ }
+
       const base64 = await new Promise<string>((res, rej) => {
         const r = new FileReader()
         r.onloadend = () => res((r.result as string).split(',')[1])
         r.onerror = rej
-        r.readAsDataURL(file)
+        r.readAsDataURL(uploadFile)
       })
-      const ext = file.name.split('.').pop() || 'jpg'
-      const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const timestamp = Date.now()
+      const filename = `${productId}-${timestamp}.webp`
       const resp = await adminFetchProducts({
         action: 'upload_image',
-        payload: { product_id: productId, filename, base64, mime_type: file.type },
+        payload: { product_id: productId, filename, base64, mime_type: 'image/webp' },
       })
       if (resp.error) { console.error(resp.error); continue }
       result.push({ url: resp.url, preview })
     } catch (e) { console.error(e) }
+  }
+  if (totalOriginal > 0 && onConvertInfo) {
+    onConvertInfo(`✅ ${formatBytes(totalOriginal)} → ${formatBytes(totalNew)}`)
   }
   return result
 }
@@ -130,11 +145,12 @@ async function uploadFiles(
 function ImageSection({
   existingImages, deletedIds, onDeleteExisting,
   newImages, onDeleteNew,
-  uploading, fileRef, onFilePick,
+  uploading, fileRef, onFilePick, convertInfo,
 }: {
   existingImages: any[]; deletedIds: string[]; onDeleteExisting: (id: string) => void
   newImages: { url: string; preview: string }[]; onDeleteNew: (i: number) => void
   uploading: boolean; fileRef: React.RefObject<HTMLInputElement>; onFilePick: () => void
+  convertInfo?: string
 }) {
   const visible = existingImages.filter(img => !deletedIds.includes(img.id))
   return (
@@ -168,10 +184,11 @@ function ImageSection({
       <button type="button" disabled={uploading} onClick={onFilePick}
         className="flex items-center gap-2 px-4 py-3 rounded-2xl border-2 border-dashed border-[#E2EAF0] text-sm font-semibold text-gray-400 hover:border-teal hover:text-teal transition-colors disabled:opacity-50 w-full justify-center">
         {uploading
-          ? <><svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Uploadujem...</>
+          ? <><svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Optimizujem sliku...</>
           : <>📷 Dodaj slike</>}
       </button>
-      <p className="text-[11px] text-gray-400 mt-1 text-center">JPG, PNG, WebP · Više slika odjednom</p>
+      {convertInfo && <p className="text-xs font-semibold text-green-600 mt-1 text-center">{convertInfo}</p>}
+      <p className="text-[11px] text-gray-400 mt-1 text-center">JPG, PNG, WebP · Automatska WebP konverzija</p>
     </div>
   )
 }
@@ -255,6 +272,7 @@ export default function AdminPage() {
   const [newVariants,  setNewVariants]  = useState<Array<{type:string;value:string;price_modifier_rsd:string}>>([])
   const [newImages,    setNewImages]    = useState<{ url: string; preview: string }[]>([])
   const [newUploading, setNewUploading] = useState(false)
+  const [newConvertInfo, setNewConvertInfo] = useState('')
   const newFileRef = useRef<HTMLInputElement>(null)
 
   // Edit product
@@ -267,6 +285,7 @@ export default function AdminPage() {
   const [editDeletedVariantIds,setEditDeletedVariantIds]= useState<string[]>([])
   const [editNewVariants,      setEditNewVariants]      = useState<Array<{type:string;value:string;price_modifier_rsd:string}>>([])
   const [editUploading,        setEditUploading]        = useState(false)
+  const [editConvertInfo,      setEditConvertInfo]      = useState('')
   const editFileRef = useRef<HTMLInputElement>(null)
 
   // Bulk edit (products)
@@ -328,8 +347,8 @@ export default function AdminPage() {
   // ── Image upload handlers ────────────────────────────────────────────────
   const handleNewFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return
-    setNewUploading(true)
-    const imgs = await uploadFiles(e.target.files, adminFetchProducts, 'temp')
+    setNewUploading(true); setNewConvertInfo('')
+    const imgs = await uploadFiles(e.target.files, adminFetchProducts, 'temp', setNewConvertInfo)
     setNewImages(p => [...p, ...imgs])
     setNewUploading(false)
     if (newFileRef.current) newFileRef.current.value = ''
@@ -337,8 +356,8 @@ export default function AdminPage() {
 
   const handleEditFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return
-    setEditUploading(true)
-    const imgs = await uploadFiles(e.target.files, adminFetchProducts, editProduct?.id || 'temp')
+    setEditUploading(true); setEditConvertInfo('')
+    const imgs = await uploadFiles(e.target.files, adminFetchProducts, editProduct?.id || 'temp', setEditConvertInfo)
     setEditNewImages(p => [...p, ...imgs])
     setEditUploading(false)
     if (editFileRef.current) editFileRef.current.value = ''
@@ -868,7 +887,7 @@ export default function AdminPage() {
                     <StatusChecks form={newProduct} setForm={setNewProduct as any} />
                     <VariantsSection existing={[]} deletedIds={[]} onDeleteExisting={() => {}} newOnes={newVariants} setNewOnes={setNewVariants} />
                     <input ref={newFileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleNewFileChange} />
-                    <ImageSection existingImages={[]} deletedIds={[]} onDeleteExisting={() => {}} newImages={newImages} onDeleteNew={i => setNewImages(p => p.filter((_, j) => j !== i))} uploading={newUploading} fileRef={newFileRef} onFilePick={() => newFileRef.current?.click()} />
+                    <ImageSection existingImages={[]} deletedIds={[]} onDeleteExisting={() => {}} newImages={newImages} onDeleteNew={i => setNewImages(p => p.filter((_, j) => j !== i))} uploading={newUploading} fileRef={newFileRef} onFilePick={() => newFileRef.current?.click()} convertInfo={newConvertInfo} />
                   </div>
                   <div className="flex gap-2 mt-5">
                     <button onClick={async () => {
@@ -916,7 +935,7 @@ export default function AdminPage() {
                     <StatusChecks form={editForm} setForm={setEditForm} />
                     <VariantsSection existing={editVariants} deletedIds={editDeletedVariantIds} onDeleteExisting={id => setEditDeletedVariantIds(p => [...p, id])} newOnes={editNewVariants} setNewOnes={setEditNewVariants} />
                     <input ref={editFileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleEditFileChange} />
-                    <ImageSection existingImages={editImages} deletedIds={editDeletedImageIds} onDeleteExisting={id => setEditDeletedImageIds(p => [...p, id])} newImages={editNewImages} onDeleteNew={i => setEditNewImages(p => p.filter((_, j) => j !== i))} uploading={editUploading} fileRef={editFileRef} onFilePick={() => editFileRef.current?.click()} />
+                    <ImageSection existingImages={editImages} deletedIds={editDeletedImageIds} onDeleteExisting={id => setEditDeletedImageIds(p => [...p, id])} newImages={editNewImages} onDeleteNew={i => setEditNewImages(p => p.filter((_, j) => j !== i))} uploading={editUploading} fileRef={editFileRef} onFilePick={() => editFileRef.current?.click()} convertInfo={editConvertInfo} />
                     {editDeletedImageIds.length > 0 && <p className="text-[11px] text-red-400 font-semibold text-center">{editDeletedImageIds.length} slika označeno za brisanje</p>}
                   </div>
                   <div className="flex gap-2 mt-5">

@@ -6,6 +6,7 @@ import { useLang } from '@/lib/i18n/LangContext'
 import LangSwitcher from '@/components/LangSwitcher'
 import Image from 'next/image'
 import type { Pet, HealthRecord } from '@/lib/types'
+import { convertToWebP, formatBytes } from '@/lib/imageUtils'
 
 export default function DashboardPage() {
   const sb = createClient(); const router = useRouter(); const { t } = useLang()
@@ -23,6 +24,12 @@ export default function DashboardPage() {
   const [allergy,setAllergy]=useState(''); const [med,setMed]=useState('')
   const [vet,setVet]=useState(''); const [note,setNote]=useState('')
   const [lost,setLost]=useState(false)
+  // photo upload
+  const [newPhoto,setNewPhoto]=useState<File|null>(null)
+  const [photoPreview,setPhotoPreview]=useState('')
+  const [converting,setConverting]=useState(false)
+  const [convertInfo,setConvertInfo]=useState('')
+  const [photoError,setPhotoError]=useState('')
 
   // health record form
   const [rTitle,setRTitle]=useState(''); const [rNote,setRNote]=useState('')
@@ -48,13 +55,37 @@ export default function DashboardPage() {
     setPet(p); setColor(p.color||''); setAge(p.age||''); setChip(p.microchip||'')
     setVacc(p.vaccinated); setAllergy(p.allergies||''); setMed(p.medication||'')
     setVet(p.vet_info||''); setNote(p.note||''); setLost(p.is_lost||false)
+    setNewPhoto(null); setPhotoPreview(''); setConvertInfo(''); setPhotoError('')
     const { data } = await sb.from('health_records').select('*').eq('pet_id', p.id).order('record_date', { ascending: false })
     setRecords(data||[])
   }
 
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]; if(!f) return
+    const allowed = ['image/jpeg','image/png','image/webp','image/heic','image/heif']
+    if (!allowed.includes(f.type)) { setPhotoError('Dozvoljeni formati: JPG, PNG, WebP'); return }
+    if (f.size > 20 * 1024 * 1024) { setPhotoError('Slika ne sme biti veća od 20MB'); return }
+    setPhotoError(''); setConverting(true); setConvertInfo(''); setPhotoPreview(URL.createObjectURL(f))
+    try {
+      const { file: webpFile, originalSize, newSize } = await convertToWebP(f, { maxWidth: 1200, maxHeight: 1200, quality: 0.85 })
+      setNewPhoto(webpFile)
+      setConvertInfo(`✅ ${formatBytes(originalSize)} → ${formatBytes(newSize)}`)
+    } catch {
+      setNewPhoto(f)
+    } finally { setConverting(false) }
+  }
+
   const save = async () => {
     if (!pet) return; setSaving(true)
-    await sb.from('pets').update({ color:color||null, age:age||null, microchip:chip||null, vaccinated:vacc, allergies:allergy||null, medication:med||null, vet_info:vet||null, note:note||null, is_lost: lost }).eq('id', pet.id)
+    let photoUrl = pet.photo_url
+    if (newPhoto && pet.qr_code_id) {
+      const path = `pets/${pet.qr_code_id}.webp`
+      await sb.storage.from('pet-photos').upload(path, newPhoto, { upsert: true, contentType: 'image/webp' })
+      const { data: u } = sb.storage.from('pet-photos').getPublicUrl(path)
+      photoUrl = u.publicUrl
+    }
+    await sb.from('pets').update({ color:color||null, age:age||null, microchip:chip||null, vaccinated:vacc, allergies:allergy||null, medication:med||null, vet_info:vet||null, note:note||null, is_lost: lost, ...(photoUrl !== pet.photo_url ? { photo_url: photoUrl } : {}) }).eq('id', pet.id)
+    if (photoUrl !== pet.photo_url) setPet(p => p ? { ...p, photo_url: photoUrl } : p)
     setSaving(false); setSaved(true); setTimeout(()=>setSaved(false), 2000)
   }
 
@@ -126,6 +157,26 @@ export default function DashboardPage() {
                 {tab==='info' && (
                   <div className="card space-y-4">
                     <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700 font-semibold">{t('dash_locked')}</div>
+                    {/* Photo upload */}
+                    <div>
+                      <label className="label">Fotografija ljubimca</label>
+                      <div
+                        onClick={() => !converting && document.getElementById('dash-photo')?.click()}
+                        className="w-full h-32 border-2 border-dashed border-[#e2f0ef] rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-teal transition-colors overflow-hidden relative">
+                        {(photoPreview || pet.photo_url)
+                          ? <img src={photoPreview || pet.photo_url!} className="w-full h-full object-cover object-top" alt="foto" />
+                          : <><div className="text-2xl mb-1">📷</div><div className="text-xs text-gray-400 font-semibold">Klikni za promenu fotografije</div></>}
+                        {converting && (
+                          <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center gap-1">
+                            <svg className="animate-spin w-5 h-5 text-teal" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                            <span className="text-xs font-bold text-teal">Optimizujem sliku...</span>
+                          </div>
+                        )}
+                      </div>
+                      <input id="dash-photo" type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+                      {convertInfo && <p className="text-xs font-semibold text-green-600 mt-1">{convertInfo}</p>}
+                      {photoError && <p className="text-xs font-semibold text-red-500 mt-1">{photoError}</p>}
+                    </div>
                     <div>
                       <label className="label">{t('dash_lost_label')}</label>
                       <div className="flex gap-2">

@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/lib/i18n/LangContext'
 import LangSwitcher from '@/components/LangSwitcher'
 import type { Species } from '@/lib/types'
+import { convertToWebP, formatBytes } from '@/lib/imageUtils'
 
 const SPECIES: {v: Species, k: any}[] = [
   {v:'pas',k:'sp_pas'},{v:'macka',k:'sp_macka'},{v:'zec',k:'sp_zec'},{v:'ptica',k:'sp_ptica'},{v:'ostalo',k:'sp_ostalo'}
@@ -22,13 +23,24 @@ export default function ActivationPage({ params }: { params: { code: string } })
   const [name,setName]=useState(''); const [species,setSpecies]=useState<Species>('pas')
   const [breed,setBreed]=useState(''); const [photo,setPhoto]=useState<File|null>(null)
   const [preview,setPreview]=useState(''); const [color,setColor]=useState('')
+  const [converting,setConverting]=useState(false); const [convertInfo,setConvertInfo]=useState('')
   const [age,setAge]=useState(''); const [chip,setChip]=useState('')
   const [vacc,setVacc]=useState<boolean|null>(null); const [allergy,setAllergy]=useState('')
   const [med,setMed]=useState(''); const [vet,setVet]=useState(''); const [note,setNote]=useState('')
 
-  const onPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]; if(!f) return
-    setPhoto(f); setPreview(URL.createObjectURL(f))
+    const allowed = ['image/jpeg','image/png','image/webp','image/heic','image/heif']
+    if (!allowed.includes(f.type)) { setError('Dozvoljeni formati: JPG, PNG, WebP'); return }
+    if (f.size > 20 * 1024 * 1024) { setError('Slika ne sme biti veća od 20MB'); return }
+    setError(''); setConverting(true); setConvertInfo(''); setPreview(URL.createObjectURL(f))
+    try {
+      const { file: webpFile, originalSize, newSize } = await convertToWebP(f, { maxWidth: 1200, maxHeight: 1200, quality: 0.85 })
+      setPhoto(webpFile)
+      setConvertInfo(`✅ ${formatBytes(originalSize)} → ${formatBytes(newSize)}`)
+    } catch {
+      setPhoto(f) // fallback na original
+    } finally { setConverting(false) }
   }
 
   const doAuth = async () => {
@@ -96,9 +108,8 @@ export default function ActivationPage({ params }: { params: { code: string } })
       if(!qr||qr.status!=='unused') throw new Error('QR kod je već iskorišćen ili ne postoji')
       let photoUrl=null
       if(photo){
-        const ext=photo.name.split('.').pop()
-        const path=`pets/${qr.id}.${ext}`
-        await sb.storage.from('pet-photos').upload(path,photo,{upsert:true})
+        const path=`pets/${qr.id}.webp`
+        await sb.storage.from('pet-photos').upload(path,photo,{upsert:true,contentType:'image/webp'})
         const {data:u}=sb.storage.from('pet-photos').getPublicUrl(path)
         photoUrl=u.publicUrl
       }
@@ -155,11 +166,18 @@ export default function ActivationPage({ params }: { params: { code: string } })
               <h2 className="font-black text-navy">{t('act_locked')}</h2>
               <div>
                 <label className="label">{t('act_photo')}</label>
-                <div onClick={()=>document.getElementById('ph')?.click()}
-                  className="w-full h-36 border-2 border-dashed border-[#e2f0ef] rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-teal transition-colors overflow-hidden">
+                <div onClick={()=>!converting&&document.getElementById('ph')?.click()}
+                  className="w-full h-36 border-2 border-dashed border-[#e2f0ef] rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-teal transition-colors overflow-hidden relative">
                   {preview?<img src={preview} className="w-full h-full object-cover object-top"/>:<><div className="text-3xl mb-1">📷</div><div className="text-sm text-gray-400 font-semibold">{t('act_photo_hint')}</div></>}
+                  {converting && (
+                    <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center gap-1">
+                      <svg className="animate-spin w-5 h-5 text-teal" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                      <span className="text-xs font-bold text-teal">Optimizujem sliku...</span>
+                    </div>
+                  )}
                 </div>
                 <input id="ph" type="file" accept="image/*" className="hidden" onChange={onPhoto}/>
+                {convertInfo && <p className="text-xs font-semibold text-green-600 mt-1">{convertInfo}</p>}
               </div>
               <div><label className="label">{t('act_pet_name')}</label><input className="input" value={name} onChange={e=>setName(e.target.value)} placeholder="Maks" /></div>
               <div>
