@@ -207,9 +207,9 @@ function StatusChecks({ form, setForm }: { form: any; setForm: (fn: (p: any) => 
 // ════════════════════════════════════════════════════════════════════════════
 export default function AdminPage() {
   const [auth,    setAuth]   = useState(false)
-  const [pin,     setPin]    = useState('')
-  const pinRef = useRef('')
-  const [tab, setTab] = useState<'qr'|'orders'|'pets'|'shop'>('orders')
+  const pinInputRef = useRef<HTMLInputElement>(null)
+  const tokenRef = useRef('')
+  const [tab, setTab] = useState<'qr'|'orders'|'pets'|'shop'|'crm'>('orders')
   const [qr,     setQr]     = useState<any[]>([])
   const [orders, setOrders] = useState<any[]>([])
   const [pets,   setPets]   = useState<any[]>([])
@@ -262,28 +262,28 @@ export default function AdminPage() {
   const adminFetch = (body?: object) =>
     fetch('/api/admin', {
       method: body ? 'POST' : 'GET',
-      headers: { 'Content-Type': 'application/json', 'x-admin-pin': pinRef.current },
+      headers: { 'Content-Type': 'application/json', 'x-session-token': tokenRef.current },
       ...(body ? { body: JSON.stringify(body) } : {}),
     }).then(r => r.json())
 
   const adminDelete = (body: object) =>
     fetch('/api/admin', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json', 'x-admin-pin': pinRef.current },
+      headers: { 'Content-Type': 'application/json', 'x-session-token': tokenRef.current },
       body: JSON.stringify(body),
     }).then(r => r.json())
 
   const adminFetchProducts = (body?: object) =>
     fetch('/api/admin/products', {
       method: body ? 'POST' : 'GET',
-      headers: { 'Content-Type': 'application/json', 'x-admin-pin': pinRef.current },
+      headers: { 'Content-Type': 'application/json', 'x-session-token': tokenRef.current },
       ...(body ? { body: JSON.stringify(body) } : {}),
     }).then(r => r.json())
 
   const adminDeleteProduct = (body: object) =>
     fetch('/api/admin/products', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json', 'x-admin-pin': pinRef.current },
+      headers: { 'Content-Type': 'application/json', 'x-session-token': tokenRef.current },
       body: JSON.stringify(body),
     }).then(r => r.json())
 
@@ -391,11 +391,20 @@ export default function AdminPage() {
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   const login = async () => {
-    pinRef.current = pin
+    const pin = pinInputRef.current?.value ?? ''
+    if (!pin) return
     setLoading(true)
+    const authRes = await fetch('/api/admin/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin }),
+    }).then(r => r.json()).catch(() => ({ error: 'Greška mreže.' }))
+    if (pinInputRef.current) pinInputRef.current.value = ''
+    if (authRes.error || !authRes.token) { setLoading(false); alert(authRes.error || 'Pogrešan PIN'); return }
+    tokenRef.current = authRes.token
     const data = await adminFetch()
     setLoading(false)
-    if (data.error) { pinRef.current = ''; alert('Pogrešan PIN'); return }
+    if (data.error) { tokenRef.current = ''; alert('Greška pri učitavanju podataka'); return }
     const codes = data.qr || []; const ords = data.orders || []
     setQr(codes); setOrders(ords); setPets(data.pets || [])
     setStats({ total: codes.length, active: codes.filter((c: any) => c.status === 'active').length, unused: codes.filter((c: any) => c.status === 'unused').length, orders: ords.length, revenue: ords.reduce((s: number, o: any) => s + (o.total_rsd || 0), 0) })
@@ -447,8 +456,10 @@ export default function AdminPage() {
       <div className="bg-white rounded-3xl p-8 w-full max-w-xs text-center">
         <div className="text-4xl mb-4">🔐</div>
         <h1 className="font-black text-navy text-xl mb-5">Admin</h1>
-        <input className="input mb-4" type="password" placeholder="PIN" value={pin} onChange={e => setPin(e.target.value)} onKeyDown={e => e.key === 'Enter' && login()} />
-        <button onClick={login} disabled={loading} className="btn-teal w-full disabled:opacity-50">{loading ? 'Čekaj...' : 'Prijavi se'}</button>
+        <form onSubmit={e => { e.preventDefault(); login() }}>
+          <input ref={pinInputRef} className="input mb-4" type="password" placeholder="PIN" autoComplete="current-password" onKeyDown={e => e.key === 'Enter' && login()} />
+          <button type="submit" disabled={loading} className="btn-teal w-full disabled:opacity-50">{loading ? 'Čekaj...' : 'Prijavi se'}</button>
+        </form>
       </div>
     </div>
   )
@@ -458,7 +469,7 @@ export default function AdminPage() {
     <div className="min-h-screen bg-[#f0fffe]">
       <nav className="bg-navy px-4 py-3 flex items-center justify-between">
         <span className="font-black text-white">pet<span className="text-teal">code</span><span className="text-white/30 text-sm font-mono ml-2">admin</span></span>
-        <button onClick={() => { setAuth(false); pinRef.current = '' }} className="text-white/40 text-xs font-bold hover:text-white">Odjavi se</button>
+        <button onClick={() => { setAuth(false); tokenRef.current = '' }} className="text-white/40 text-xs font-bold hover:text-white">Odjavi se</button>
       </nav>
 
       <div className="max-w-5xl mx-auto p-4 pb-24">
@@ -925,7 +936,7 @@ export default function AdminPage() {
             </div>
             <div className="flex gap-2 mt-5">
               <button onClick={async () => {
-                const r = await fetch('/api/admin', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-pin': pinRef.current }, body: JSON.stringify({ action: 'update_pet', payload: { id: petEdit.id, ...petEditForm } }) }).then(r => r.json())
+                const r = await fetch('/api/admin', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-session-token': tokenRef.current }, body: JSON.stringify({ action: 'update_pet', payload: { id: petEdit.id, ...petEditForm } }) }).then(r => r.json())
                 if (r.error) { alert('Greška: ' + r.error); return }
                 setPetEdit(null); await load()
               }} className="btn-primary flex-1">Sačuvaj</button>
