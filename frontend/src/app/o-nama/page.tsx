@@ -39,7 +39,7 @@ export default function ONamaPage() {
               Sve je počelo jednostavnom idejom — šta ako svaki ljubimac ima digitalni profil dostupan svakome ko ga nađe? Bez aplikacije, bez registracije, samo jedan sken.
             </p>
             <p>
-              PetCode je nastao u Arilju 2025. godine, iz ljubavi prema životinjama i vere da moderna tehnologija može da pomogne da se svaki izgubljeni ljubimac vrati kući.
+              PetCode je nastao u Arilju 2026. godine, iz ljubavi prema životinjama i vere da moderna tehnologija može da pomogne da se svaki izgubljeni ljubimac vrati kući.
             </p>
             <p>
               Danas pomažemo vlasnicima širom Srbije da se osećaju spokojno — jer znaju da, bez obzira gde završi njihov ljubimac, pronalazač ima sve informacije koje su mu potrebne da ga vrati kući.
@@ -97,7 +97,7 @@ export default function ONamaPage() {
       <footer className="border-t border-[#E2EAF0] py-8 px-4 bg-white mt-8">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <PetCodeLogo size="sm" showTagline />
-          <div className="text-xs text-gray-400 font-medium">© 2025 PetCode · Srbija · petcodeoffice@gmail.com</div>
+          <div className="text-xs text-gray-400 font-medium">© 2026 PetCode · Srbija · petcodeoffice@gmail.com</div>
           <div className="flex items-center gap-5">
             <Link href="/" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">Početna</Link>
             <Link href="/prodavnica" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">Prodavnica</Link>

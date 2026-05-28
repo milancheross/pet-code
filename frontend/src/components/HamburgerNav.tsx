@@ -134,7 +134,7 @@ export default function HamburgerNav() {
             color: 'rgba(255,255,255,0.25)',
             fontWeight: 500,
           }}>
-            © 2025 PetCode · Srbija
+            © 2026 PetCode · Srbija
           </div>
         </div>
       )}

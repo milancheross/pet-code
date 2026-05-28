@@ -145,7 +145,7 @@ export default async function ProdavnicaPage({
       <footer className="border-t border-[#E2EAF0] py-8 px-4 bg-white mt-8">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <PetCodeLogo size="sm" showTagline />
-          <div className="text-xs text-gray-400 font-medium">© 2025 PetCode · Srbija · petcodeoffice@gmail.com</div>
+          <div className="text-xs text-gray-400 font-medium">© 2026 PetCode · Srbija · petcodeoffice@gmail.com</div>
           <div className="flex items-center gap-5">
             <Link href="/" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">Početna</Link>
             <Link href="/o-nama" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">O nama</Link>

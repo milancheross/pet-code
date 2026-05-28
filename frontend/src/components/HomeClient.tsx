@@ -4,16 +4,14 @@ import LangSwitcher from '@/components/LangSwitcher'
 import PetCodeLogo from '@/components/PetCodeLogo'
 import HamburgerNav from '@/components/HamburgerNav'
 import CartIconButton from '@/components/CartIconButton'
-import ProductCard, { type ProductCardProps } from '@/components/ProductCard'
 import Link from 'next/link'
 import { useState } from 'react'
-import { PRICE_PER_TAG } from '@/lib/types'
 
 const FAQ_KEYS = [
   ['faq_q1','faq_a1'],['faq_q2','faq_a2'],['faq_q3','faq_a3'],['faq_q4','faq_a4'],
 ] as const
 
-export default function HomeClient({ shopProducts }: { shopProducts: ProductCardProps[] }) {
+export default function HomeClient() {
   const { t } = useLang()
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
@@ -329,60 +327,44 @@ export default function HomeClient({ shopProducts }: { shopProducts: ProductCard
         </div>
       </section>
 
-      {/* ── NAŠI PROIZVODI ──────────────────────────────────────────── */}
-      <section id="cena" className="py-16 md:py-20 px-4 bg-white border-y border-[#E2EAF0]">
+      {/* ── USKORO U PRODAJI ─────────────────────────────────────────── */}
+      <section id="cena" className="py-16 md:py-20 px-4 bg-white border-y border-[#E2EAF0] overflow-hidden">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10 md:mb-14">
             <div className="section-label mb-3">// prodavnica</div>
             <h2 className="text-2xl md:text-4xl font-extrabold text-navy tracking-tight">Naši proizvodi</h2>
-            <p className="text-gray-400 font-medium mt-2 text-sm md:text-base">
-              QR privesci od nerđajućeg čelika — doživotni profil za svakog ljubimca.
-            </p>
           </div>
 
-          {shopProducts.length > 0 ? (
-            <>
-              <div className={`grid gap-6 ${shopProducts.length === 1 ? 'max-w-xs mx-auto' : shopProducts.length === 2 ? 'sm:grid-cols-2 max-w-xl mx-auto' : 'sm:grid-cols-2 lg:grid-cols-3'}`}>
-                {shopProducts.map(product => (
-                  <ProductCard key={product.id} {...product} />
-                ))}
-              </div>
-              <div className="text-center mt-10">
-                <Link href="/prodavnica" className="inline-flex items-center gap-2 text-sm font-bold text-teal hover:text-navy transition-colors">
-                  Pogledaj sve proizvode
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                </Link>
-              </div>
-            </>
-          ) : (
-            /* Fallback when no products in DB yet */
-            <div className="max-w-sm mx-auto bg-navy rounded-3xl p-7 md:p-8 shadow-[0_20px_50px_rgba(11,31,59,0.22)] relative">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-orange text-white text-[10px] font-bold px-4 py-1 rounded-full uppercase tracking-widest shadow-[0_4px_12px_rgba(255,107,74,0.4)] whitespace-nowrap">
-                QR privezak
-              </div>
-              <div className="text-center mb-6 pt-2">
-                <div className="text-white/40 text-xs font-bold uppercase tracking-widest mb-3">Cena po privetku</div>
-                <div className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">
-                  {PRICE_PER_TAG.toLocaleString()}
-                  <span className="text-xl md:text-2xl font-semibold ml-2">RSD</span>
-                </div>
-                <div className="text-white/30 text-sm font-medium mt-1">plaćanje pouzećem</div>
-              </div>
-              <ul className="space-y-3 mb-7 text-sm font-medium text-white/60">
-                {['Doživotni profil ljubimca', 'QR privezak od nerđajućeg čelika', 'Prečnik 29 mm', 'Dostava Post Express-om'].map(item => (
-                  <li key={item} className="flex gap-3 items-center">
-                    <span className="w-5 h-5 rounded-full bg-teal/20 flex items-center justify-center flex-shrink-0">
-                      <svg width="9" height="9" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 5.7L6.5 2.3" stroke="#19B6B2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    </span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/naruci" className="block text-center py-3.5 rounded-full font-bold text-sm bg-orange text-white hover:bg-orange2 transition-all shadow-[0_4px_16px_rgba(255,107,74,0.4)]">
-                {t('hero_cta')} →
-              </Link>
+          {/* Ghost cards + coming soon overlay — popularni metod modernih sajtova */}
+          <div className="relative">
+            {/* Blurred placeholder cards */}
+            <div className="flex gap-5 justify-center pointer-events-none select-none" aria-hidden="true">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex-shrink-0 w-52 md:w-64 h-72 md:h-80 rounded-3xl bg-gradient-to-b from-navy/8 to-navy/4 border border-[#E2EAF0]" />
+              ))}
             </div>
-          )}
+
+            {/* Coming soon overlay */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center backdrop-blur-[6px] bg-white/70 rounded-3xl">
+              <div className="flex flex-col items-center text-center px-6">
+                <div className="w-14 h-14 rounded-2xl bg-navy flex items-center justify-center mb-5 shadow-[0_12px_30px_rgba(11,31,59,0.22)]">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <rect x="5" y="11" width="14" height="10" rx="2" stroke="#19B6B2" strokeWidth="1.8"/>
+                    <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#19B6B2" strokeWidth="1.8" strokeLinecap="round"/>
+                    <circle cx="12" cy="16" r="1.5" fill="#19B6B2"/>
+                  </svg>
+                </div>
+                <h3 className="text-2xl md:text-4xl font-extrabold text-navy tracking-tight mb-2">Uskoro u prodaji</h3>
+                <p className="text-gray-400 font-medium text-sm md:text-base max-w-xs leading-relaxed">
+                  Pripremamo ponudu QR privezaka. Pratite nas — lansiranje uskoro!
+                </p>
+                <div className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 bg-teal/10 rounded-full">
+                  <span className="w-2 h-2 rounded-full bg-teal animate-pulse" />
+                  <span className="text-teal font-bold text-sm tracking-wide">Dolazi uskoro</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -429,7 +411,7 @@ export default function HomeClient({ shopProducts }: { shopProducts: ProductCard
       <footer className="border-t border-[#E2EAF0] py-8 md:py-10 px-4 bg-white">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <PetCodeLogo size="sm" showTagline />
-          <div className="text-xs text-gray-400 font-medium text-center">© 2025 PetCode · Srbija · petcodeoffice@gmail.com</div>
+          <div className="text-xs text-gray-400 font-medium text-center">© 2026 PetCode · Srbija · petcodeoffice@gmail.com</div>
           <div className="flex items-center gap-4 flex-wrap justify-center">
             <Link href="/prodavnica" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">Prodavnica</Link>
             <Link href="/o-nama"     className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">O nama</Link>
