@@ -24,7 +24,7 @@ export default function HamburgerNav() {
     <>
       {/* ── Hamburger button ─────────────────────────────────── */}
       <button
-        className="lg:hidden flex flex-col justify-center items-center gap-[5px] w-10 h-10 rounded-xl hover:bg-gray-100 transition-colors flex-shrink-0"
+        className="flex flex-col justify-center items-center gap-[5px] w-10 h-10 rounded-xl hover:bg-gray-100 transition-colors flex-shrink-0"
         onClick={() => setOpen(true)}
         aria-label="Otvori meni"
         aria-expanded={open}
