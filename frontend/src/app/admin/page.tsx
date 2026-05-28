@@ -149,7 +149,7 @@ function ImageSection({
   uploading, fileRef, onFilePick, convertInfo,
 }: {
   existingImages: any[]; deletedIds: string[]; onDeleteExisting: (id: string) => void
-  newImages: { url: string; preview: string }[]; onDeleteNew: (i: number) => void
+  newImages: { url?: string; preview: string }[]; onDeleteNew: (i: number) => void
   uploading: boolean; fileRef: React.RefObject<HTMLInputElement>; onFilePick: () => void
   convertInfo?: string
 }) {
@@ -271,7 +271,7 @@ export default function AdminPage() {
   const [newCategory, setNewCategory] = useState({ name: '', description: '' })
   const [newProduct, setNewProduct] = useState({ ...EMPTY_PRODUCT })
   const [newVariants,  setNewVariants]  = useState<Array<{type:string;value:string;price_modifier_rsd:string}>>([])
-  const [newImages,    setNewImages]    = useState<{ url: string; preview: string }[]>([])
+  const [newImages,    setNewImages]    = useState<{ url?: string; preview: string; base64?: string; filename?: string }[]>([])
   const [newUploading, setNewUploading] = useState(false)
   const [newConvertInfo, setNewConvertInfo] = useState('')
   const newFileRef = useRef<HTMLInputElement>(null)
@@ -349,8 +349,30 @@ export default function AdminPage() {
   const handleNewFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return
     setNewUploading(true); setNewConvertInfo('')
-    const imgs = await uploadFiles(e.target.files, adminFetchProducts, 'temp', setNewConvertInfo)
-    setNewImages(p => [...p, ...imgs])
+    const { convertToWebP, formatBytes } = await import('@/lib/imageUtils')
+    let totalOriginal = 0; let totalNew = 0
+    const pending: { preview: string; base64: string; filename: string }[] = []
+    for (const file of Array.from(e.target.files)) {
+      const preview = URL.createObjectURL(file)
+      try {
+        let uploadFile = file
+        try {
+          const converted = await convertToWebP(file, { maxWidth: 1600, maxHeight: 1600, quality: 0.90 })
+          uploadFile = converted.file
+          totalOriginal += converted.originalSize
+          totalNew += converted.newSize
+        } catch { /* keep original */ }
+        const base64 = await new Promise<string>((res, rej) => {
+          const r = new FileReader()
+          r.onloadend = () => res((r.result as string).split(',')[1])
+          r.onerror = rej
+          r.readAsDataURL(uploadFile)
+        })
+        pending.push({ preview, base64, filename: `${Date.now()}.webp` })
+      } catch (err) { console.error(err) }
+    }
+    setNewImages(p => [...p, ...pending])
+    if (totalOriginal > 0 && pending.length > 0) setNewConvertInfo(`✅ ${formatBytes(totalOriginal)} → ${formatBytes(totalNew)}`)
     setNewUploading(false)
     if (newFileRef.current) newFileRef.current.value = ''
   }
@@ -916,7 +938,15 @@ export default function AdminPage() {
                       const pid = res.product?.id
                       if (pid) {
                         for (const v of newVariants) { if (v.value) await adminFetchProducts({ action: 'add_variant', payload: { product_id: pid, name: v.value, type: v.type, value: v.value, price_modifier_rsd: parseFloat(v.price_modifier_rsd)||0 } }) }
-                        for (let i = 0; i < newImages.length; i++) { await adminFetchProducts({ action: 'add_image', payload: { product_id: pid, url: newImages[i].url, sort_order: i } }) }
+                        for (let i = 0; i < newImages.length; i++) {
+                          const img = newImages[i]
+                          let url = img.url
+                          if (!url && img.base64) {
+                            const resp = await adminFetchProducts({ action: 'upload_image', payload: { product_id: pid, filename: img.filename || `image-${i}.webp`, base64: img.base64, mime_type: 'image/webp' } })
+                            if (resp?.ok && resp.url) url = resp.url
+                          }
+                          if (url) await adminFetchProducts({ action: 'add_image', payload: { product_id: pid, url, sort_order: i } })
+                        }
                       }
                       setNewProduct({ ...EMPTY_PRODUCT }); setNewVariants([]); setNewImages([]); setShopModal('none')
                       await load()
