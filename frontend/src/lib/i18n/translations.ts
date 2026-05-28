@@ -3,7 +3,7 @@ export const translations = {
     // Nav
     nav_order: 'Naruči privezak', nav_login: 'Moj nalog', nav_how: 'Kako radi', nav_price: 'Cena',
     // Landing
-    hero_title: 'Vaš ljubimac uvek pronađen.', hero_sub: 'Jedan sken QR privezka — nalazač odmah vidi ime vašeg ljubimca, vaš broj telefona i medicinske podatke. Bez aplikacije, bez registracije.',
+    hero_title: 'Vaš ljubimac uvek pronađen.', hero_sub: 'Jedan sken QR priveska — nalazač odmah vidi ime vašeg ljubimca, vaš broj telefona i medicinske podatke. Bez aplikacije, bez registracije.',
     hero_cta: 'Naruči privezak', hero_cta2: 'Kako funkcioniše ↓',
     trust_steel: 'Nerđajući čelik', trust_noapp: 'Bez aplikacije', trust_delivery: 'Post Express dostava', trust_cod: 'Plaćanje pouzećem',
     how_title: 'Tri koraka do spokoja.', how_s1_t: 'Naručite privezak', how_s1: 'Odaberete količinu i pošaljete narudžbinu. Privezak stiže za 1–2 dana na vašu adresu.',
@@ -15,7 +15,7 @@ export const translations = {
     faq_q1: 'Da li nalazač mora da ima aplikaciju?', faq_a1: 'Ne. Svaki telefon sa kamerom može da skenira QR kod — otvara se obična web stranica, bez preuzimanja ičega.',
     faq_q2: 'Da li mogu da menjam podatke posle aktivacije?', faq_a2: 'Možete menjati sve osim imena, vrste i fotografije vašeg ljubimca — ti podaci su zaključani radi sigurnosti.',
     faq_q3: 'Kako se plaća?', faq_a3: 'Isključivo pouzećem — plaćate kuriru kada preuzmete paket. Nema online plaćanja niti registracije kartice.',
-    faq_q4: 'Koliko traje dostava?', faq_a4: 'Post Express dostavlja za 1–3 radna dana u Beograd i 1–3 radnih dana za ostatak Srbije.',
+    faq_q4: 'Koliko traje dostava?', faq_a4: 'Post Express dostavlja za 1–3 radna dana na teritoriji cele Srbije.',
     // Narudžbina
     order_title: 'Naruči privezak', order_name: 'Ime i prezime', order_phone: 'Telefon',
     order_email: 'Email adresa', order_address: 'Ulica i broj', order_city: 'Grad',
@@ -26,7 +26,7 @@ export const translations = {
     order_error: 'Došlo je do greške. Pokušajte ponovo.',
     order_required: 'Molimo vas da popunite sva obavezna polja.',
     // Aktivacija
-    act_title: 'Aktivacija privezka', act_sub_auth: 'Prijavite se ili kreirajte nalog',
+    act_title: 'Aktivacija priveska', act_sub_auth: 'Prijavite se ili kreirajte nalog',
     act_sub_pet: 'Unesite podatke o vašem ljubimcu', act_step1: 'Vaši podaci', act_step2: 'Podaci o ljubimcu',
     act_owner_name: 'Vaše ime *', act_phone: 'Telefon *', act_email: 'Email *', act_pass: 'Lozinka *',
     act_pass_ph: 'najmanje 6 karaktera', act_next: 'Nastavi →', act_loading: 'Učitavam...',
@@ -78,7 +78,7 @@ export const translations = {
     faq_q1: 'Does the finder need an app?', faq_a1: 'No. Any phone with a camera can scan a QR code directly — it opens a regular web page.',
     faq_q2: 'Can I change info after activation?', faq_a2: 'You can change everything except the pet\'s name, species and photo — those are locked for security.',
     faq_q3: 'How do I pay?', faq_a3: 'Cash on delivery only — you pay the courier when you receive the package.',
-    faq_q4: 'How long does delivery take?', faq_a4: '1–3 business days for Belgrade, 1–3 for the rest of Serbia.',
+    faq_q4: 'How long does delivery take?', faq_a4: '1–3 business days across all of Serbia.',
     order_title: 'Order tag', order_name: 'Full name', order_phone: 'Phone',
     order_email: 'Email (optional)', order_address: 'Street address', order_city: 'City',
     order_qty: 'Quantity', order_note: 'Note (optional)', order_note_ph: 'e.g. call before delivery',
