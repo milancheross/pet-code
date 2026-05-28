@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { randomBytes } from 'crypto'
+import { verifySessionToken } from '@/lib/adminAuth'
 
-function checkPin(req: NextRequest) {
-  const pin = req.headers.get('x-admin-pin')
-  const secret = process.env.ADMIN_SECRET
-  if (!secret) return false
-  return pin === secret
+function checkAuth(req: NextRequest) {
+  return verifySessionToken(req.headers.get('x-session-token'))
 }
 
 export async function GET(req: NextRequest) {
-  if (!checkPin(req)) {
+  if (!checkAuth(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   const sb = createAdminClient()
@@ -27,7 +25,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!checkPin(req)) {
+  if (!checkAuth(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   const sb = createAdminClient()
@@ -104,7 +102,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  if (!checkPin(req)) {
+  if (!checkAuth(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   const sb = createAdminClient()

@@ -1,21 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { verifySessionToken } from '@/lib/adminAuth'
 
 function revalidateShop() {
   revalidatePath('/prodavnica')
   revalidatePath('/prodavnica', 'layout')
 }
 
-function checkPin(req: NextRequest) {
-  const pin = req.headers.get('x-admin-pin')
-  const secret = process.env.ADMIN_SECRET
-  if (!secret) return false
-  return pin === secret
+function checkAuth(req: NextRequest) {
+  return verifySessionToken(req.headers.get('x-session-token'))
 }
 
 export async function GET(req: NextRequest) {
-  if (!checkPin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!checkAuth(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const sb = createAdminClient()
   try {
     const [{ data: categories }, { data: products }] = await Promise.all([
@@ -31,7 +29,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!checkPin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!checkAuth(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const sb = createAdminClient()
   const { action, payload } = await req.json()
 
@@ -162,7 +160,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  if (!checkPin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!checkAuth(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const sb = createAdminClient()
   const { action, id } = await req.json()
 

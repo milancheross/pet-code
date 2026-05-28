@@ -21,6 +21,7 @@ export const metadata: Metadata = {
     type: 'website',
   },
   keywords: ['qr privezak', 'privezak za pse', 'identifikacija ljubimaca', 'petcode', 'qr oznaka ljubimac srbija'],
+  icons: { icon: '/favicon.svg' },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
