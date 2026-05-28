@@ -146,11 +146,11 @@ async function uploadFiles(
 function ImageSection({
   existingImages, deletedIds, onDeleteExisting,
   newImages, onDeleteNew,
-  uploading, fileRef, onFilePick, convertInfo,
+  uploading, onFilePick, convertInfo,
 }: {
   existingImages: any[]; deletedIds: string[]; onDeleteExisting: (id: string) => void
   newImages: { url?: string; preview: string }[]; onDeleteNew: (i: number) => void
-  uploading: boolean; fileRef: React.RefObject<HTMLInputElement>; onFilePick: () => void
+  uploading: boolean; onFilePick: () => void
   convertInfo?: string
 }) {
   const visible = existingImages.filter(img => !deletedIds.includes(img.id))
@@ -181,7 +181,6 @@ function ImageSection({
           ))}
         </div>
       )}
-      <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { if (e.target.files) onFilePick(); }} />
       <button type="button" disabled={uploading} onClick={onFilePick}
         className="flex items-center gap-2 px-4 py-3 rounded-2xl border-2 border-dashed border-[#E2EAF0] text-sm font-semibold text-gray-400 hover:border-teal hover:text-teal transition-colors disabled:opacity-50 w-full justify-center">
         {uploading
@@ -927,7 +926,7 @@ export default function AdminPage() {
                     </div>
                     <VariantsSection existing={[]} deletedIds={[]} onDeleteExisting={() => {}} newOnes={newVariants} setNewOnes={setNewVariants} />
                     <input ref={newFileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleNewFileChange} />
-                    <ImageSection existingImages={[]} deletedIds={[]} onDeleteExisting={() => {}} newImages={newImages} onDeleteNew={i => setNewImages(p => p.filter((_, j) => j !== i))} uploading={newUploading} fileRef={newFileRef} onFilePick={() => newFileRef.current?.click()} convertInfo={newConvertInfo} />
+                    <ImageSection existingImages={[]} deletedIds={[]} onDeleteExisting={() => {}} newImages={newImages} onDeleteNew={i => setNewImages(p => p.filter((_, j) => j !== i))} uploading={newUploading} onFilePick={() => newFileRef.current?.click()} convertInfo={newConvertInfo} />
                   </div>
                   <div className="flex gap-2 mt-5">
                     <button onClick={async () => {
@@ -994,7 +993,7 @@ export default function AdminPage() {
                     </div>
                     <VariantsSection existing={editVariants} deletedIds={editDeletedVariantIds} onDeleteExisting={id => setEditDeletedVariantIds(p => [...p, id])} newOnes={editNewVariants} setNewOnes={setEditNewVariants} />
                     <input ref={editFileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleEditFileChange} />
-                    <ImageSection existingImages={editImages} deletedIds={editDeletedImageIds} onDeleteExisting={id => setEditDeletedImageIds(p => [...p, id])} newImages={editNewImages} onDeleteNew={i => setEditNewImages(p => p.filter((_, j) => j !== i))} uploading={editUploading} fileRef={editFileRef} onFilePick={() => editFileRef.current?.click()} convertInfo={editConvertInfo} />
+                    <ImageSection existingImages={editImages} deletedIds={editDeletedImageIds} onDeleteExisting={id => setEditDeletedImageIds(p => [...p, id])} newImages={editNewImages} onDeleteNew={i => setEditNewImages(p => p.filter((_, j) => j !== i))} uploading={editUploading} onFilePick={() => editFileRef.current?.click()} convertInfo={editConvertInfo} />
                     {editDeletedImageIds.length > 0 && <p className="text-[11px] text-red-400 font-semibold text-center">{editDeletedImageIds.length} slika označeno za brisanje</p>}
                   </div>
                   <div className="flex gap-2 mt-5">
