@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import sharp from 'sharp'
 
 function revalidateShop() {
   revalidatePath('/prodavnica')
@@ -98,31 +97,21 @@ export async function POST(req: NextRequest) {
   }
 
   if (action === 'upload_image') {
-    const { product_id, filename, base64 } = payload
-    const raw = Buffer.from(base64, 'base64')
-
-    // Try sharp compression; fall back to raw buffer if sharp fails.
-    // Typed as Uint8Array (supertype of Buffer) to avoid TS Buffer<ArrayBuffer> vs
-    // Buffer<ArrayBufferLike> generic conflict.
-    let uploadBuffer: Uint8Array = raw
     try {
-      uploadBuffer = await sharp(raw)
-        .resize(1400, 1400, { fit: 'inside', withoutEnlargement: true })
-        .webp({ quality: 82, effort: 5, smartSubsample: true })
-        .toBuffer()
-    } catch (sharpErr) {
-      console.warn('[upload_image] sharp failed, uploading raw buffer:', sharpErr)
+      const { product_id, filename, base64, mime_type } = payload
+      const bytes = Buffer.from(base64, 'base64')
+      const path = `${product_id}/${filename}`
+      const { error: uploadError } = await sb.storage.from('product-images').upload(path, bytes, {
+        contentType: mime_type || 'image/webp',
+        upsert: true,
+      })
+      if (uploadError) return NextResponse.json({ error: uploadError.message }, { status: 500 })
+      const { data: { publicUrl } } = sb.storage.from('product-images').getPublicUrl(path)
+      return NextResponse.json({ ok: true, url: publicUrl })
+    } catch (err: any) {
+      console.error('[upload_image]', err)
+      return NextResponse.json({ error: err?.message || 'Upload failed' }, { status: 500 })
     }
-
-    const webpFilename = filename.replace(/\.[^.]+$/, '') + '.webp'
-    const path = `${product_id}/${webpFilename}`
-    const { error: uploadError } = await sb.storage.from('product-images').upload(path, uploadBuffer, {
-      contentType: 'image/webp',
-      upsert: true,
-    })
-    if (uploadError) return NextResponse.json({ error: uploadError.message }, { status: 500 })
-    const { data: { publicUrl } } = sb.storage.from('product-images').getPublicUrl(path)
-    return NextResponse.json({ ok: true, url: publicUrl })
   }
 
   if (action === 'bulk_products') {
