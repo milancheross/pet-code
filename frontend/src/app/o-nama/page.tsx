@@ -26,7 +26,7 @@ export default function ONamaPage() {
           <div className="section-label mb-3">// o nama</div>
           <h1 className="text-4xl font-extrabold text-navy tracking-tight mb-4">Ko smo mi</h1>
           <p className="text-gray-500 font-medium max-w-xl mx-auto leading-relaxed">
-            PetCode je srpski startup koji pomaže vlasnicima ljubimaca da se nikad više ne plaše gubitka svog ljubimca.
+            PetCode je srpski projekat koji pomaže vlasnicima ljubimaca da nikad više ne brinu šta će se desiti ako im ljubimac odluta.
           </p>
         </div>
 
@@ -36,13 +36,13 @@ export default function ONamaPage() {
           <h2 className="text-2xl font-extrabold text-navy mb-4">Kako je PetCode nastao</h2>
           <div className="text-gray-500 font-medium leading-relaxed space-y-4">
             <p>
-              Sve je počelo sa jednostavnom idejom — šta ako svaki ljubimac ima digitalni identitet dostupan svakome ko ga nađe? Bez aplikacije, bez registracije, samo jedan sken.
+              Sve je počelo jednostavnom idejom — šta ako svaki ljubimac ima digitalni profil dostupan svakome ko ga nađe? Bez aplikacije, bez registracije, samo jedan sken.
             </p>
             <p>
-              PetCode je nastao u Arilju 2026. godine, iz ljubavi prema životinjama i vere da moderna tehnologija može da pomogne da se svaki izgubljeni ljubimac vrati kući.
+              PetCode je nastao u Arilju 2025. godine, iz ljubavi prema životinjama i vere da moderna tehnologija može da pomogne da se svaki izgubljeni ljubimac vrati kući.
             </p>
             <p>
-              Danas pomažemo vlasnicima u celoj Srbiji da se osećaju sigurno — jer znaju da, bez obzira gde završi njihov ljubimac, pronalazač ima sve informacije potrebne za povratak.
+              Danas pomažemo vlasnicima širom Srbije da se osećaju spokojno — jer znaju da, bez obzira gde završi njihov ljubimac, pronalazač ima sve informacije koje su mu potrebne da ga vrati kući.
             </p>
           </div>
         </div>
@@ -55,10 +55,10 @@ export default function ONamaPage() {
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             {[
-              { icon: '🛡️', title: 'Sigurnost', desc: 'Svaki privezak je napravljen od nerđajućeg čelika sa epoksi zaštitom — traje godinama bez brisanja QR koda.', color: 'teal' },
-              { icon: '⭐', title: 'Kvalitet', desc: 'Ne pravimo kompromise. Svaki QR privezak je testiran pre isporuke i garantovan za doživotnu upotrebu.', color: 'orange' },
-              { icon: '🐾', title: 'Briga za ljubimce', desc: 'Svaka odluka koju donosimo počinje pitanjem: da li ovo pomaže ljubimcima i njihovim vlasnicima?', color: 'teal' },
-              { icon: '🇷🇸', title: 'Lokalno', desc: 'Ponosni smo što smo srpski proizvod. Sve projektujemo, pakujemo i šaljemo iz Arilja, Srbija.', color: 'navy' },
+              { icon: '🛡️', title: 'Sigurnost', desc: 'Svaki privezak je od nerđajućeg čelika sa epoksi zaštitom — QR kod ostaje čitljiv godinama, po kiši i blatu.', color: 'teal' },
+              { icon: '⭐', title: 'Kvalitet', desc: 'Ne pravimo kompromise. Svaki privezak je proveren pre isporuke i nosi doživotnu garanciju.', color: 'orange' },
+              { icon: '🐾', title: 'Ljubimci na prvom mestu', desc: 'Svaka odluka počinje istim pitanjem — da li ovo zaista pomaže ljubimcima i njihovim vlasnicima?', color: 'teal' },
+              { icon: '🇷🇸', title: 'Domaći proizvod', desc: 'Ponosni smo što smo srpski. Sve projektujemo, pakujemo i šaljemo iz Arilja, Srbija.', color: 'navy' },
             ].map(v => (
               <div key={v.title} className="bg-white rounded-3xl border border-[#E2EAF0] p-6 shadow-[0_4px_24px_rgba(11,31,59,0.06)] flex gap-4">
                 <div className={`w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 text-xl ${

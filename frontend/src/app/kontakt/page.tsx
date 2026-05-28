@@ -84,7 +84,7 @@ export default function KontaktPage() {
                 {[
                   ['Ponedeljak – Petak', '09:00 – 17:00'],
                   ['Subota', '10:00 – 14:00'],
-                  ['Nedеlja', 'Zatvoreno'],
+                  ['Nedelja', 'Zatvoreno'],
                 ].map(([day, hours]) => (
                   <div key={day} className="flex justify-between items-center">
                     <span className="text-white/60 text-sm font-medium">{day}</span>

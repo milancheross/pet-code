@@ -1,8 +1,8 @@
 import { createAdminClient } from '@/lib/supabase/server'
 import HomeClient from '@/components/HomeClient'
 import type { Metadata } from 'next'
+import type { ProductCardProps } from '@/components/ProductCard'
 
-// Always fetch fresh — featured product can change any time from admin
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
@@ -20,66 +20,57 @@ export const metadata: Metadata = {
   keywords: ['qr privezak', 'privezak za pse', 'identifikacija ljubimaca', 'petcode', 'qr tag ljubimac srbija', 'pet qr code tag'],
 }
 
-async function getFeaturedProduct() {
+async function getShopProducts(): Promise<ProductCardProps[]> {
   try {
     const sb = createAdminClient()
     const now = new Date()
-
-    // 1. Try explicit featured product
-    let { data } = await sb
+    const { data } = await sb
       .from('products')
-      .select('*, product_images(url,alt,sort_order), categories(name,slug)')
+      .select('*, product_images(url,alt,sort_order), product_variants(*), categories(name,slug)')
       .eq('is_active', true)
-      .eq('is_featured', true)
+      .order('is_featured', { ascending: false })
       .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
+      .limit(6)
 
-    // 2. Fall back to first active product (no is_featured required)
-    if (!data) {
-      const res = await sb
-        .from('products')
-        .select('*, product_images(url,alt,sort_order), categories(name,slug)')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-      data = res.data
-    }
+    if (!data?.length) return []
 
-    if (!data) return null
+    return data.map((p: any) => {
+      const regularPrice = p.regular_price_rsd ?? p.price_rsd ?? 0
+      const hasSale =
+        p.sale_price_rsd && p.sale_price_rsd < regularPrice &&
+        (!p.sale_start || new Date(p.sale_start) <= now) &&
+        (!p.sale_end   || new Date(p.sale_end)   >= now)
+      const salePrice = hasSale ? p.sale_price_rsd : null
+      const effectivePrice = salePrice ?? regularPrice
+      const discountPct = salePrice ? Math.round((1 - salePrice / regularPrice) * 100) : 0
 
-    const regularPrice = (data as any).regular_price_rsd ?? (data as any).price_rsd ?? 0
-    const hasSale =
-      (data as any).sale_price_rsd &&
-      (data as any).sale_price_rsd < regularPrice &&
-      (!(data as any).sale_start || new Date((data as any).sale_start) <= now) &&
-      (!(data as any).sale_end   || new Date((data as any).sale_end)   >= now)
-    const salePrice: number | null = hasSale ? (data as any).sale_price_rsd : null
-    const effectivePrice = salePrice ?? regularPrice
-    const discountPct = salePrice ? Math.round((1 - salePrice / regularPrice) * 100) : 0
+      const images = [...(p.product_images || [])]
+        .filter((img: any) => img.url)
+        .sort((a: any, b: any) => a.sort_order - b.sort_order)
 
-    const images = [...((data as any).product_images || [])]
-      .filter((img: any) => img.url)
-      .sort((a: any, b: any) => a.sort_order - b.sort_order)
-
-    return {
-      name: (data as any).name as string,
-      slug: (data as any).slug as string,
-      regularPrice,
-      salePrice,
-      effectivePrice,
-      discountPct,
-      image: images[0]?.url ?? null,
-      description: ((data as any).short_description || (data as any).description || '') as string,
-      category: ((data as any).categories as any)?.name ?? null,
-    }
+      return {
+        id:               p.id as string,
+        slug:             p.slug as string,
+        name:             p.name as string,
+        price:            effectivePrice,
+        comparePrice:     salePrice ? regularPrice : undefined,
+        discountPct:      discountPct || undefined,
+        image:            images[0]?.url ?? undefined,
+        imageAlt:         images[0]?.alt ?? undefined,
+        category:         (p.categories as any)?.name ?? undefined,
+        shortDescription: (p.short_description || p.description || '') as string,
+        inStock:          p.in_stock !== false,
+        isNew:            !!p.is_new,
+        isFeatured:       !!p.is_featured,
+        variants:         (p.product_variants || []).filter((v: any) => v.is_active !== false),
+      }
+    })
   } catch {
-    return null
+    return []
   }
 }
 
 export default async function Page() {
-  const featuredProduct = await getFeaturedProduct()
-  return <HomeClient featuredProduct={featuredProduct} />
+  const shopProducts = await getShopProducts()
+  return <HomeClient shopProducts={shopProducts} />
 }

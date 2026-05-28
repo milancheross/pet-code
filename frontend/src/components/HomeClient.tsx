@@ -4,6 +4,7 @@ import LangSwitcher from '@/components/LangSwitcher'
 import PetCodeLogo from '@/components/PetCodeLogo'
 import HamburgerNav from '@/components/HamburgerNav'
 import CartIconButton from '@/components/CartIconButton'
+import ProductCard, { type ProductCardProps } from '@/components/ProductCard'
 import Link from 'next/link'
 import { useState } from 'react'
 import { PRICE_PER_TAG } from '@/lib/types'
@@ -12,19 +13,7 @@ const FAQ_KEYS = [
   ['faq_q1','faq_a1'],['faq_q2','faq_a2'],['faq_q3','faq_a3'],['faq_q4','faq_a4'],
 ] as const
 
-interface FeaturedProduct {
-  name: string
-  slug: string
-  regularPrice: number
-  salePrice: number | null
-  effectivePrice: number
-  image: string | null
-  description: string
-  category: string | null
-  discountPct: number
-}
-
-export default function HomeClient({ featuredProduct }: { featuredProduct: FeaturedProduct | null }) {
+export default function HomeClient({ shopProducts }: { shopProducts: ProductCardProps[] }) {
   const { t } = useLang()
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
@@ -213,9 +202,9 @@ export default function HomeClient({ featuredProduct }: { featuredProduct: Featu
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-4">
             <p className="text-xl md:text-3xl font-extrabold text-navy tracking-tight">
-              Skeniraj me. <span className="text-teal">Imam svoj dom.</span> <span className="text-orange">♥</span>
+              Skeniraj me. <span className="text-teal">Znam gde je moj dom.</span> <span className="text-orange">♥</span>
             </p>
-            <p className="text-gray-400 font-medium mt-2 text-sm tracking-wide">Jednostavno. Brzo. Pouzdano.</p>
+            <p className="text-gray-400 font-medium mt-2 text-sm tracking-wide">Jednostavno. Brzo. Sigurno.</p>
           </div>
           <div className="grid sm:grid-cols-3 gap-4 mt-10">
             {[
@@ -224,7 +213,7 @@ export default function HomeClient({ featuredProduct }: { featuredProduct: Featu
                   <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 2L4 5v5.5c0 4.5 3 8.5 7 9.5 4-1 7-5 7-9.5V5L11 2Z" stroke="#19B6B2" strokeWidth="1.8" strokeLinejoin="round"/></svg>
                 ),
                 title: 'Siguran sam',
-                desc: 'Vlasnik će odmah dobiti kontakt informacije i vašu lokaciju.',
+                desc: 'Vlasnik odmah dobija vaš kontakt i tačnu lokaciju gde sam nađen.',
                 accent: 'teal',
               },
               {
@@ -232,7 +221,7 @@ export default function HomeClient({ featuredProduct }: { featuredProduct: Featu
                   <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 19s-7-5.5-7-10a7 7 0 0114 0c0 4.5-7 10-7 10Z" stroke="#FF6B4A" strokeWidth="1.8" strokeLinejoin="round"/><circle cx="11" cy="9" r="2.5" stroke="#FF6B4A" strokeWidth="1.6"/></svg>
                 ),
                 title: 'Voljen sam',
-                desc: 'Moj QR kod vodi me kući — bez aplikacije, bez registracije.',
+                desc: 'Moj QR privezak vodi me kući — bez aplikacije, bez komplikacija.',
                 accent: 'orange',
               },
               {
@@ -240,7 +229,7 @@ export default function HomeClient({ featuredProduct }: { featuredProduct: Featu
                   <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3c-4.4 0-8 3.1-8 7 0 2.5 1.4 4.7 3.5 6L5 19l4.5-1.5c.5.1 1 .2 1.5.2 4.4 0 8-3.1 8-7s-3.6-7-8-7Z" stroke="#0B1F3B" strokeWidth="1.8" strokeLinejoin="round"/></svg>
                 ),
                 title: 'Pripadam',
-                desc: 'Svaki ljubimac zaslužuje da bude pronađen i vraćen kući.',
+                desc: 'Svaki ljubimac zaslužuje da bude pronađen i bezbedan vraćen svom domu.',
                 accent: 'navy',
               },
             ].map(({ icon, title, desc, accent }) => (
@@ -252,7 +241,7 @@ export default function HomeClient({ featuredProduct }: { featuredProduct: Featu
                 </div>
                 <div>
                   <h3 className="font-bold text-navy mb-1">{title}</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed font-medium">{desc}</p>
+                  <p className="text-sm text-gray-500 leading-relaxed font-medium" suppressHydrationWarning>{desc}</p>
                 </div>
               </div>
             ))}
@@ -298,7 +287,7 @@ export default function HomeClient({ featuredProduct }: { featuredProduct: Featu
               <div className="section-label text-teal mb-3">// privezak</div>
               <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-4 tracking-tight">{t('spec_title')}</h2>
               <p className="text-white/45 leading-relaxed mb-6 font-medium text-sm md:text-base">
-                Nerđajući čelik sa epoksi zaštitom. QR kod ostaje čitljiv godinama — kiša, blato, igra u parku.
+                Nerđajući čelik sa epoksi zaštitom. QR kod ostaje savršeno čitljiv godinama — kiša, blato, igra u parku — ništa ga ne može oštetiti.
               </p>
               <div className="grid grid-cols-2 gap-3">
                 {[
@@ -340,106 +329,60 @@ export default function HomeClient({ featuredProduct }: { featuredProduct: Featu
         </div>
       </section>
 
-      {/* ── PRICING ─────────────────────────────────────────────────────── */}
+      {/* ── NAŠI PROIZVODI ──────────────────────────────────────────── */}
       <section id="cena" className="py-16 md:py-20 px-4 bg-white border-y border-[#E2EAF0]">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10 md:mb-14">
-            <div className="section-label mb-3">// cena</div>
-            <h2 className="text-2xl md:text-4xl font-extrabold text-navy tracking-tight">{t('price_title')}</h2>
+            <div className="section-label mb-3">// prodavnica</div>
+            <h2 className="text-2xl md:text-4xl font-extrabold text-navy tracking-tight">Naši proizvodi</h2>
+            <p className="text-gray-400 font-medium mt-2 text-sm md:text-base">
+              QR privesci od nerđajućeg čelika — doživotni profil za svakog ljubimca.
+            </p>
           </div>
-          <div className="max-w-sm mx-auto">
-            {featuredProduct ? (
-              <div className="bg-navy rounded-3xl overflow-hidden border-2 border-navy shadow-[0_20px_50px_rgba(11,31,59,0.22)] relative">
-                {/* Badge */}
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-orange text-white text-[10px] font-bold px-4 py-1 rounded-full uppercase tracking-widest shadow-[0_4px_12px_rgba(255,107,74,0.4)] whitespace-nowrap z-10">
-                  {featuredProduct.category || 'Istaknuto'}
-                </div>
 
-                {/* Product image */}
-                {featuredProduct.image && (
-                  <div className="bg-white flex items-center justify-center" style={{ minHeight: 200 }}>
-                    <img
-                      src={featuredProduct.image}
-                      alt={featuredProduct.name}
-                      style={{ maxHeight: 200, width: '100%', objectFit: 'contain', padding: '20px 28px' }}
-                    />
-                  </div>
-                )}
-
-                {/* Content */}
-                <div className={`px-7 pb-7 ${featuredProduct.image ? 'pt-4' : 'pt-10'}`}>
-                  <div className="text-center mb-5">
-                    <h3 className="text-white font-extrabold text-xl mb-3 leading-tight">{featuredProduct.name}</h3>
-                    {featuredProduct.salePrice ? (
-                      <>
-                        <div className="text-white/40 text-sm line-through font-medium">{featuredProduct.regularPrice.toLocaleString()} RSD</div>
-                        <div className="flex items-baseline justify-center gap-2 mt-0.5">
-                          <span className="text-4xl md:text-5xl font-extrabold text-orange tracking-tight">{featuredProduct.salePrice.toLocaleString()}</span>
-                          <span className="text-xl font-semibold text-orange/80">RSD</span>
-                          <span className="bg-orange/20 text-orange text-xs font-black px-2 py-0.5 rounded-full">-{featuredProduct.discountPct}%</span>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">
-                        {featuredProduct.effectivePrice.toLocaleString()}
-                        <span className="text-xl md:text-2xl font-semibold ml-2">RSD</span>
-                      </div>
-                    )}
-                    <div className="text-white/30 text-sm font-medium mt-1">plaćanje pouzećem</div>
-                  </div>
-
-                  {featuredProduct.description && (
-                    <ul className="space-y-2.5 mb-6">
-                      {featuredProduct.description.split(/[.\n]/).filter(s => s.trim().length > 3).slice(0, 4).map((line, i) => (
-                        <li key={i} className="flex gap-3 items-start text-sm font-medium text-white/60">
-                          <span className="w-5 h-5 rounded-full bg-teal/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <svg width="9" height="9" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 5.7L6.5 2.3" stroke="#19B6B2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                          </span>
-                          {line.trim()}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-
-                  <Link href={`/prodavnica/${featuredProduct.slug}`}
-                    className="block text-center py-3.5 rounded-full font-bold text-sm bg-orange text-white hover:bg-orange2 transition-all shadow-[0_4px_16px_rgba(255,107,74,0.4)]">
-                    {t('hero_cta')} →
-                  </Link>
-                  <Link href="/prodavnica" className="block text-center mt-2 text-xs text-white/30 hover:text-white/60 transition-colors font-medium">
-                    Pogledaj sve proizvode →
-                  </Link>
-                </div>
+          {shopProducts.length > 0 ? (
+            <>
+              <div className={`grid gap-6 ${shopProducts.length === 1 ? 'max-w-xs mx-auto' : shopProducts.length === 2 ? 'sm:grid-cols-2 max-w-xl mx-auto' : 'sm:grid-cols-2 lg:grid-cols-3'}`}>
+                {shopProducts.map(product => (
+                  <ProductCard key={product.id} {...product} />
+                ))}
               </div>
-            ) : (
-              /* Fallback static card when no featured product */
-              <div className="bg-navy rounded-3xl p-7 md:p-8 border-2 border-navy shadow-[0_20px_50px_rgba(11,31,59,0.22)] relative">
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-orange text-white text-[10px] font-bold px-4 py-1 rounded-full uppercase tracking-widest shadow-[0_4px_12px_rgba(255,107,74,0.4)] whitespace-nowrap">
-                  1 privezak
-                </div>
-                <div className="text-center mb-6 pt-2">
-                  <div className="text-white/40 text-xs font-bold uppercase tracking-widest mb-3">Cena po privetku</div>
-                  <div className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">
-                    {PRICE_PER_TAG.toLocaleString()}
-                    <span className="text-xl md:text-2xl font-semibold ml-2">RSD</span>
-                  </div>
-                  <div className="text-white/30 text-sm font-medium mt-1">plaćanje pouzećem</div>
-                </div>
-                <ul className="space-y-3 mb-7 text-sm font-medium text-white/60">
-                  {['Doživotni profil ljubimca', 'QR privezak od nerđajućeg čelika', 'Prečnik 29mm', 'Besplatna dostava'].map(item => (
-                    <li key={item} className="flex gap-3 items-center">
-                      <span className="w-5 h-5 rounded-full bg-teal/20 flex items-center justify-center flex-shrink-0">
-                        <svg width="9" height="9" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 5.7L6.5 2.3" stroke="#19B6B2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      </span>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/naruci" className="block text-center py-3.5 rounded-full font-bold text-sm bg-orange text-white hover:bg-orange2 transition-all shadow-[0_4px_16px_rgba(255,107,74,0.4)]">
-                  {t('hero_cta')} →
+              <div className="text-center mt-10">
+                <Link href="/prodavnica" className="inline-flex items-center gap-2 text-sm font-bold text-teal hover:text-navy transition-colors">
+                  Pogledaj sve proizvode
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </Link>
               </div>
-            )}
-          </div>
+            </>
+          ) : (
+            /* Fallback when no products in DB yet */
+            <div className="max-w-sm mx-auto bg-navy rounded-3xl p-7 md:p-8 shadow-[0_20px_50px_rgba(11,31,59,0.22)] relative">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-orange text-white text-[10px] font-bold px-4 py-1 rounded-full uppercase tracking-widest shadow-[0_4px_12px_rgba(255,107,74,0.4)] whitespace-nowrap">
+                QR privezak
+              </div>
+              <div className="text-center mb-6 pt-2">
+                <div className="text-white/40 text-xs font-bold uppercase tracking-widest mb-3">Cena po privetku</div>
+                <div className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">
+                  {PRICE_PER_TAG.toLocaleString()}
+                  <span className="text-xl md:text-2xl font-semibold ml-2">RSD</span>
+                </div>
+                <div className="text-white/30 text-sm font-medium mt-1">plaćanje pouzećem</div>
+              </div>
+              <ul className="space-y-3 mb-7 text-sm font-medium text-white/60">
+                {['Doživotni profil ljubimca', 'QR privezak od nerđajućeg čelika', 'Prečnik 29 mm', 'Dostava Post Express-om'].map(item => (
+                  <li key={item} className="flex gap-3 items-center">
+                    <span className="w-5 h-5 rounded-full bg-teal/20 flex items-center justify-center flex-shrink-0">
+                      <svg width="9" height="9" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 5.7L6.5 2.3" stroke="#19B6B2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/naruci" className="block text-center py-3.5 rounded-full font-bold text-sm bg-orange text-white hover:bg-orange2 transition-all shadow-[0_4px_16px_rgba(255,107,74,0.4)]">
+                {t('hero_cta')} →
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 
@@ -473,9 +416,9 @@ export default function HomeClient({ featuredProduct }: { featuredProduct: Featu
       <section className="py-12 md:py-16 px-4">
         <div className="max-w-3xl mx-auto bg-navy rounded-[28px] md:rounded-[32px] p-8 md:p-10 text-center shadow-[0_24px_60px_rgba(11,31,59,0.2)]">
           <div className="text-2xl md:text-3xl font-extrabold text-white mb-3 tracking-tight">
-            Mali privezak. <span className="text-teal">Velika sigurnost.</span>
+            Mali privezak. <span className="text-teal">Ogromno olakšanje.</span>
           </div>
-          <p className="text-white/50 font-medium mb-7 text-sm md:text-base">Zauvek uz vas.</p>
+          <p className="text-white/50 font-medium mb-7 text-sm md:text-base">Naručite danas — vaš ljubimac je zaštićen doživotno.</p>
           <Link href="/naruci" className="inline-block btn-primary text-base px-7 py-4">
             {t('hero_cta')} →
           </Link>
