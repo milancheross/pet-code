@@ -15,7 +15,7 @@ export const translations = {
     faq_q1: 'Da li nalazač mora da ima aplikaciju?', faq_a1: 'Ne. Svaki telefon sa kamerom može da skenira QR kod — otvara se obična web stranica, bez preuzimanja ičega.',
     faq_q2: 'Da li mogu da menjam podatke posle aktivacije?', faq_a2: 'Možete menjati sve osim imena, vrste i fotografije vašeg ljubimca — ti podaci su zaključani radi sigurnosti.',
     faq_q3: 'Kako se plaća?', faq_a3: 'Isključivo pouzećem — plaćate kuriru kada preuzmete paket. Nema online plaćanja niti registracije kartice.',
-    faq_q4: 'Koliko traje dostava?', faq_a4: 'Post Express dostavlja za 1–3 radna dana u Beograd i 2–5 radnih dana za ostatak Srbije.',
+    faq_q4: 'Koliko traje dostava?', faq_a4: 'Post Express dostavlja za 1–3 radna dana u Beograd i 1–3 radnih dana za ostatak Srbije.',
     // Narudžbina
     order_title: 'Naruči privezak', order_name: 'Ime i prezime', order_phone: 'Telefon',
     order_email: 'Email adresa', order_address: 'Ulica i broj', order_city: 'Grad',
@@ -78,7 +78,7 @@ export const translations = {
     faq_q1: 'Does the finder need an app?', faq_a1: 'No. Any phone with a camera can scan a QR code directly — it opens a regular web page.',
     faq_q2: 'Can I change info after activation?', faq_a2: 'You can change everything except the pet\'s name, species and photo — those are locked for security.',
     faq_q3: 'How do I pay?', faq_a3: 'Cash on delivery only — you pay the courier when you receive the package.',
-    faq_q4: 'How long does delivery take?', faq_a4: '1–3 business days for Belgrade, 2–5 for the rest of Serbia.',
+    faq_q4: 'How long does delivery take?', faq_a4: '1–3 business days for Belgrade, 1–3 for the rest of Serbia.',
     order_title: 'Order tag', order_name: 'Full name', order_phone: 'Phone',
     order_email: 'Email (optional)', order_address: 'Street address', order_city: 'City',
     order_qty: 'Quantity', order_note: 'Note (optional)', order_note_ph: 'e.g. call before delivery',
