@@ -132,7 +132,7 @@ async function uploadFiles(
         action: 'upload_image',
         payload: { product_id: productId, filename, base64, mime_type: 'image/webp' },
       })
-      if (resp.error) { console.error(resp.error); continue }
+      if (resp.error || !resp.url) { console.error('Upload failed:', resp.error || 'no url'); continue }
       result.push({ url: resp.url, preview })
     } catch (e) { console.error(e) }
   }

@@ -101,20 +101,22 @@ export async function POST(req: NextRequest) {
     const { product_id, filename, base64 } = payload
     const raw = Buffer.from(base64, 'base64')
 
-    // ── Sharp compression ──────────────────────────────────────────────────────
-    // - Max 1400×1400 (product gallery; full-bleed on mobile is ~430px)
-    // - WebP quality 82 + effort 5: excellent quality, ~50–60% smaller than
-    //   canvas-encoded WebP at 0.90
-    // - EXIF stripped automatically by sharp
-    const compressed = await sharp(raw)
-      .resize(1400, 1400, { fit: 'inside', withoutEnlargement: true })
-      .webp({ quality: 82, effort: 5, smartSubsample: true })
-      .toBuffer()
+    // Try sharp compression; fall back to raw buffer if sharp fails.
+    // Typed as Uint8Array (supertype of Buffer) to avoid TS Buffer<ArrayBuffer> vs
+    // Buffer<ArrayBufferLike> generic conflict.
+    let uploadBuffer: Uint8Array = raw
+    try {
+      uploadBuffer = await sharp(raw)
+        .resize(1400, 1400, { fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 82, effort: 5, smartSubsample: true })
+        .toBuffer()
+    } catch (sharpErr) {
+      console.warn('[upload_image] sharp failed, uploading raw buffer:', sharpErr)
+    }
 
-    // Always store as .webp regardless of original extension
     const webpFilename = filename.replace(/\.[^.]+$/, '') + '.webp'
     const path = `${product_id}/${webpFilename}`
-    const { error: uploadError } = await sb.storage.from('product-images').upload(path, compressed, {
+    const { error: uploadError } = await sb.storage.from('product-images').upload(path, uploadBuffer, {
       contentType: 'image/webp',
       upsert: true,
     })

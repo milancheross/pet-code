@@ -66,7 +66,9 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
   if (!product) return notFound()
 
-  const images = [...(product.product_images || [])].sort((a: any, b: any) => a.sort_order - b.sort_order)
+  const images = [...(product.product_images || [])]
+    .filter((img: any) => img.url)
+    .sort((a: any, b: any) => a.sort_order - b.sort_order)
   const mainImg = images[0]
 
   const variantsByType: Record<string, any[]> = {}

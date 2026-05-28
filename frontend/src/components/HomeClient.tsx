@@ -357,11 +357,11 @@ export default function HomeClient({ featuredProduct }: { featuredProduct: Featu
 
                 {/* Product image */}
                 {featuredProduct.image && (
-                  <div className="bg-[#F4F7FA] px-8 pt-7 pb-3 flex items-center justify-center" style={{ minHeight: 140 }}>
+                  <div className="bg-white flex items-center justify-center" style={{ minHeight: 200 }}>
                     <img
                       src={featuredProduct.image}
                       alt={featuredProduct.name}
-                      className="max-h-32 w-auto object-contain"
+                      style={{ maxHeight: 200, width: '100%', objectFit: 'contain', padding: '20px 28px' }}
                     />
                   </div>
                 )}

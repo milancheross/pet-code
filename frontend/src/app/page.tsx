@@ -2,6 +2,9 @@ import { createAdminClient } from '@/lib/supabase/server'
 import HomeClient from '@/components/HomeClient'
 import type { Metadata } from 'next'
 
+// Always fetch fresh — featured product can change any time from admin
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'PetCode.rs — QR identifikacija ljubimaca | Srbija',
   description: 'QR privezak od nerđajućeg čelika za pse i mačke. Skeniranjem koda dobijate kontakt vlasnika i lokaciju ljubimca. Dostava Post Express-om po celoj Srbiji. Plaćanje pouzećem.',
@@ -21,14 +24,28 @@ async function getFeaturedProduct() {
   try {
     const sb = createAdminClient()
     const now = new Date()
-    const { data } = await sb
+
+    // 1. Try explicit featured product
+    let { data } = await sb
       .from('products')
       .select('*, product_images(url,alt,sort_order), categories(name,slug)')
       .eq('is_active', true)
       .eq('is_featured', true)
       .order('created_at', { ascending: false })
       .limit(1)
-      .single()
+      .maybeSingle()
+
+    // 2. Fall back to first active product (no is_featured required)
+    if (!data) {
+      const res = await sb
+        .from('products')
+        .select('*, product_images(url,alt,sort_order), categories(name,slug)')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      data = res.data
+    }
 
     if (!data) return null
 
@@ -42,9 +59,9 @@ async function getFeaturedProduct() {
     const effectivePrice = salePrice ?? regularPrice
     const discountPct = salePrice ? Math.round((1 - salePrice / regularPrice) * 100) : 0
 
-    const images = [...((data as any).product_images || [])].sort(
-      (a: any, b: any) => a.sort_order - b.sort_order
-    )
+    const images = [...((data as any).product_images || [])]
+      .filter((img: any) => img.url)
+      .sort((a: any, b: any) => a.sort_order - b.sort_order)
 
     return {
       name: (data as any).name as string,
