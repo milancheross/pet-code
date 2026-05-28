@@ -105,20 +105,24 @@ async function uploadFiles(
   productId: string,
   onConvertInfo?: (info: string) => void,
 ): Promise<{ url: string; preview: string }[]> {
+  console.log('[uploadFiles] START — files:', files.length, 'productId:', productId)
   const { convertToWebP, formatBytes } = await import('@/lib/imageUtils')
   const result: { url: string; preview: string }[] = []
   let totalOriginal = 0; let totalNew = 0
   for (const file of Array.from(files)) {
+    console.log('[uploadFiles] processing file:', file.name, file.size, 'bytes')
     const preview = URL.createObjectURL(file)
     try {
-      // Convert to WebP before upload
       let uploadFile = file
       try {
         const converted = await convertToWebP(file, { maxWidth: 1600, maxHeight: 1600, quality: 0.90 })
         uploadFile = converted.file
         totalOriginal += converted.originalSize
         totalNew += converted.newSize
-      } catch { /* fallback to original */ }
+        console.log('[uploadFiles] WebP conversion OK —', converted.originalSize, '→', converted.newSize)
+      } catch (convErr) {
+        console.warn('[uploadFiles] WebP conversion failed, using original:', convErr)
+      }
 
       const base64 = await new Promise<string>((res, rej) => {
         const r = new FileReader()
@@ -126,19 +130,23 @@ async function uploadFiles(
         r.onerror = rej
         r.readAsDataURL(uploadFile)
       })
+      console.log('[uploadFiles] base64 length:', base64.length, '(~', Math.round(base64.length * 0.75 / 1024), 'KB)')
       const timestamp = Date.now()
       const filename = `${productId}-${timestamp}.webp`
+      console.log('[uploadFiles] calling upload_image — path:', productId + '/' + filename)
       const resp = await adminFetchProducts({
         action: 'upload_image',
         payload: { product_id: productId, filename, base64, mime_type: 'image/webp' },
       })
+      console.log('[uploadFiles] upload_image response:', resp)
       if (resp.error || !resp.url) { alert(`Greška pri uploadu slike: ${resp.error || 'nema URL-a'}`); continue }
       result.push({ url: resp.url, preview })
-    } catch (e) { console.error(e) }
+    } catch (e) { console.error('[uploadFiles] unexpected error:', e) }
   }
   if (totalOriginal > 0 && onConvertInfo) {
     onConvertInfo(`✅ ${formatBytes(totalOriginal)} → ${formatBytes(totalNew)}`)
   }
+  console.log('[uploadFiles] DONE — uploaded:', result.length, '/', files.length)
   return result
 }
 
@@ -347,11 +355,13 @@ export default function AdminPage() {
   // ── Image upload handlers ────────────────────────────────────────────────
   const handleNewFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return
+    console.log('[handleNewFileChange] files selected:', e.target.files.length)
     setNewUploading(true); setNewConvertInfo('')
     const { convertToWebP, formatBytes } = await import('@/lib/imageUtils')
     let totalOriginal = 0; let totalNew = 0
     const pending: { preview: string; base64: string; filename: string }[] = []
     for (const file of Array.from(e.target.files)) {
+      console.log('[handleNewFileChange] processing:', file.name, file.size, 'bytes')
       const preview = URL.createObjectURL(file)
       try {
         let uploadFile = file
@@ -360,19 +370,22 @@ export default function AdminPage() {
           uploadFile = converted.file
           totalOriginal += converted.originalSize
           totalNew += converted.newSize
-        } catch { /* keep original */ }
+          console.log('[handleNewFileChange] WebP OK:', converted.originalSize, '→', converted.newSize)
+        } catch (convErr) { console.warn('[handleNewFileChange] WebP failed:', convErr) }
         const base64 = await new Promise<string>((res, rej) => {
           const r = new FileReader()
           r.onloadend = () => res((r.result as string).split(',')[1])
           r.onerror = rej
           r.readAsDataURL(uploadFile)
         })
+        console.log('[handleNewFileChange] base64 ready, length:', base64.length)
         pending.push({ preview, base64, filename: `${Date.now()}.webp` })
-      } catch (err) { console.error(err) }
+      } catch (err) { console.error('[handleNewFileChange] error:', err) }
     }
     setNewImages(p => [...p, ...pending])
     if (totalOriginal > 0 && pending.length > 0) setNewConvertInfo(`✅ ${formatBytes(totalOriginal)} → ${formatBytes(totalNew)}`)
     setNewUploading(false)
+    console.log('[handleNewFileChange] DONE — pending images:', pending.length)
     if (newFileRef.current) newFileRef.current.value = ''
   }
 
