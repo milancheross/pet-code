@@ -132,7 +132,7 @@ async function uploadFiles(
         action: 'upload_image',
         payload: { product_id: productId, filename, base64, mime_type: 'image/webp' },
       })
-      if (resp.error || !resp.url) { console.error('Upload failed:', resp.error || 'no url'); continue }
+      if (resp.error || !resp.url) { alert(`Greška pri uploadu slike: ${resp.error || 'nema URL-a'}`); continue }
       result.push({ url: resp.url, preview })
     } catch (e) { console.error(e) }
   }
@@ -944,6 +944,7 @@ export default function AdminPage() {
                           if (!url && img.base64) {
                             const resp = await adminFetchProducts({ action: 'upload_image', payload: { product_id: pid, filename: img.filename || `image-${i}.webp`, base64: img.base64, mime_type: 'image/webp' } })
                             if (resp?.ok && resp.url) url = resp.url
+                            else { alert(`Greška pri uploadu slike: ${resp?.error || 'nepoznata greška'}`); continue }
                           }
                           if (url) await adminFetchProducts({ action: 'add_image', payload: { product_id: pid, url, sort_order: i } })
                         }
