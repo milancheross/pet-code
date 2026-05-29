@@ -1,16 +1,10 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useLang } from '@/lib/i18n/LangContext'
 import Link from 'next/link'
 
-const LINKS = [
-  { href: '/',           label: 'Početna' },
-  { href: '/prodavnica', label: 'Prodavnica' },
-  { href: '/o-nama',     label: 'O nama' },
-  { href: '/naruci',     label: 'Naruči' },
-  { href: '/login',      label: 'Prijava' },
-]
-
 export default function HamburgerNav() {
+  const { t } = useLang()
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
@@ -19,6 +13,14 @@ export default function HamburgerNav() {
   }, [open])
 
   const close = () => setOpen(false)
+
+  const links = [
+    { href: '/',           label: t('nav_home') },
+    { href: '/prodavnica', label: t('nav_shop') },
+    { href: '/o-nama',     label: t('nav_about') },
+    { href: '/naruci',     label: t('nav_order') },
+    { href: '/login',      label: t('nav_login_label') },
+  ]
 
   return (
     <>
@@ -81,7 +83,7 @@ export default function HamburgerNav() {
 
           {/* Nav links */}
           <nav style={{ marginTop: 24 }}>
-            {LINKS.map(l => (
+            {links.map(l => (
               <Link
                 key={l.href}
                 href={l.href}
@@ -119,7 +121,7 @@ export default function HamburgerNav() {
                 boxShadow: '0 6px 24px rgba(255,107,74,0.4)',
               }}
             >
-              Naruči odmah →
+              {t('nav_order_now')}
             </Link>
           </div>
 

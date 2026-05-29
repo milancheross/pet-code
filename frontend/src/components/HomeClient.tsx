@@ -28,9 +28,9 @@ export default function HomeClient() {
 
           {/* Desktop links */}
           <div className="hidden lg:flex items-center gap-7">
-            <Link href="/prodavnica" className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">Prodavnica</Link>
-            <Link href="/o-nama"     className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">O nama</Link>
-            <Link href="/kontakt"    className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">Kontakt</Link>
+            <Link href="/prodavnica" className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">{t('nav_shop')}</Link>
+            <Link href="/o-nama"     className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">{t('nav_about')}</Link>
+            <Link href="/kontakt"    className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">{t('nav_contact')}</Link>
             <Link href="/login"      className="text-sm font-semibold text-gray-400 hover:text-navy transition-colors">{t('nav_login')}</Link>
           </div>
 
@@ -200,9 +200,9 @@ export default function HomeClient() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-4">
             <p className="text-xl md:text-3xl font-extrabold text-navy tracking-tight">
-              Skeniraj me. <span className="text-teal">Znam gde je moj dom.</span> <span className="text-orange">♥</span>
+              {t('promise_scan')} <span className="text-teal">{t('promise_home')}</span> <span className="text-orange">♥</span>
             </p>
-            <p className="text-gray-400 font-medium mt-2 text-sm tracking-wide">Jednostavno. Brzo. Sigurno.</p>
+            <p className="text-gray-400 font-medium mt-2 text-sm tracking-wide">{t('promise_tagline')}</p>
           </div>
           <div className="grid sm:grid-cols-3 gap-4 mt-10">
             {[
@@ -210,24 +210,24 @@ export default function HomeClient() {
                 icon: (
                   <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 2L4 5v5.5c0 4.5 3 8.5 7 9.5 4-1 7-5 7-9.5V5L11 2Z" stroke="#19B6B2" strokeWidth="1.8" strokeLinejoin="round"/></svg>
                 ),
-                title: 'Siguran sam',
-                desc: 'Vlasnik odmah dobija vaš kontakt i tačnu lokaciju gde sam nađen.',
+                title: t('promise_safe_t'),
+                desc: t('promise_safe_d'),
                 accent: 'teal',
               },
               {
                 icon: (
                   <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 19s-7-5.5-7-10a7 7 0 0114 0c0 4.5-7 10-7 10Z" stroke="#FF6B4A" strokeWidth="1.8" strokeLinejoin="round"/><circle cx="11" cy="9" r="2.5" stroke="#FF6B4A" strokeWidth="1.6"/></svg>
                 ),
-                title: 'Voljen sam',
-                desc: 'Moj QR privezak vodi me kući — bez aplikacije, bez komplikacija.',
+                title: t('promise_loved_t'),
+                desc: t('promise_loved_d'),
                 accent: 'orange',
               },
               {
                 icon: (
                   <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3c-4.4 0-8 3.1-8 7 0 2.5 1.4 4.7 3.5 6L5 19l4.5-1.5c.5.1 1 .2 1.5.2 4.4 0 8-3.1 8-7s-3.6-7-8-7Z" stroke="#0B1F3B" strokeWidth="1.8" strokeLinejoin="round"/></svg>
                 ),
-                title: 'Pripadam',
-                desc: 'Svaki ljubimac zaslužuje da bude pronađen i bezbedan vraćen svom domu.',
+                title: t('promise_belong_t'),
+                desc: t('promise_belong_d'),
                 accent: 'navy',
               },
             ].map(({ icon, title, desc, accent }) => (
@@ -282,16 +282,16 @@ export default function HomeClient() {
         <div className="max-w-5xl mx-auto">
           <div className="bg-navy rounded-[28px] md:rounded-[32px] p-6 md:p-12 grid md:grid-cols-2 gap-8 md:gap-12 items-center">
             <div>
-              <div className="section-label text-teal mb-3">// privezak</div>
+              <div className="section-label text-teal mb-3">// {t('spec_tag')}</div>
               <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-4 tracking-tight">{t('spec_title')}</h2>
               <p className="text-white/45 leading-relaxed mb-6 font-medium text-sm md:text-base">
-                Nerđajući čelik sa epoksi zaštitom. QR kod ostaje savršeno čitljiv godinama — kiša, blato, igra u parku — ništa ga ne može oštetiti.
+                {t('spec_desc')}
               </p>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  [t('spec_material'), 'Nerđajući čelik'],
+                  [t('spec_material'), t('spec_steel_val')],
                   [t('spec_size'), '29 mm'],
-                  [t('spec_coating'), 'Epoxy premaz'],
+                  [t('spec_coating'), t('spec_epoxy_val')],
                 ].map(([l,v]) => (
                   <div key={l} className="bg-white/5 border border-white/8 rounded-2xl p-4">
                     <div className="text-[10px] text-white/30 font-medium uppercase tracking-widest mb-1">{l}</div>
@@ -331,8 +331,8 @@ export default function HomeClient() {
       <section id="cena" className="py-16 md:py-20 px-4 bg-white border-y border-[#E2EAF0] overflow-hidden">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10 md:mb-14">
-            <div className="section-label mb-3">// prodavnica</div>
-            <h2 className="text-2xl md:text-4xl font-extrabold text-navy tracking-tight">Naši proizvodi</h2>
+            <div className="section-label mb-3">// {t('products_label')}</div>
+            <h2 className="text-2xl md:text-4xl font-extrabold text-navy tracking-tight">{t('products_title')}</h2>
           </div>
 
           {/* Ghost cards + coming soon overlay — popularni metod modernih sajtova */}
@@ -354,13 +354,13 @@ export default function HomeClient() {
                     <circle cx="12" cy="16" r="1.5" fill="#19B6B2"/>
                   </svg>
                 </div>
-                <h3 className="text-2xl md:text-4xl font-extrabold text-navy tracking-tight mb-2">Uskoro u prodaji</h3>
+                <h3 className="text-2xl md:text-4xl font-extrabold text-navy tracking-tight mb-2">{t('coming_soon')}</h3>
                 <p className="text-gray-400 font-medium text-sm md:text-base max-w-xs leading-relaxed">
-                  Pripremamo ponudu QR privezaka. Pratite nas — lansiranje uskoro!
+                  {t('coming_soon_sub')}
                 </p>
                 <div className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 bg-teal/10 rounded-full">
                   <span className="w-2 h-2 rounded-full bg-teal animate-pulse" />
-                  <span className="text-teal font-bold text-sm tracking-wide">Dolazi uskoro</span>
+                  <span className="text-teal font-bold text-sm tracking-wide">{t('coming_soon_badge')}</span>
                 </div>
               </div>
             </div>
@@ -398,9 +398,9 @@ export default function HomeClient() {
       <section className="py-12 md:py-16 px-4">
         <div className="max-w-3xl mx-auto bg-navy rounded-[28px] md:rounded-[32px] p-8 md:p-10 text-center shadow-[0_24px_60px_rgba(11,31,59,0.2)]">
           <div className="text-2xl md:text-3xl font-extrabold text-white mb-3 tracking-tight">
-            Mali privezak. <span className="text-teal">Ogromno olakšanje.</span>
+            {t('cta_title')} <span className="text-teal">{t('cta_title2')}</span>
           </div>
-          <p className="text-white/50 font-medium mb-7 text-sm md:text-base">Naručite danas — vaš ljubimac je zaštićen doživotno.</p>
+          <p className="text-white/50 font-medium mb-7 text-sm md:text-base">{t('cta_sub')}</p>
           <Link href="/naruci" className="inline-block btn-primary text-base px-7 py-4">
             {t('hero_cta')} →
           </Link>
@@ -413,10 +413,10 @@ export default function HomeClient() {
           <PetCodeLogo size="sm" showTagline />
           <div className="text-xs text-gray-400 font-medium text-center">© 2026 PetCode · Srbija · petcodeoffice@gmail.com</div>
           <div className="flex items-center gap-4 flex-wrap justify-center">
-            <Link href="/prodavnica" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">Prodavnica</Link>
-            <Link href="/o-nama"     className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">O nama</Link>
+            <Link href="/prodavnica" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">{t('nav_shop')}</Link>
+            <Link href="/o-nama"     className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">{t('nav_about')}</Link>
             <Link href="/login"      className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">{t('nav_login')}</Link>
-            <Link href="/kontakt"    className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">Kontakt</Link>
+            <Link href="/kontakt"    className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">{t('nav_contact')}</Link>
           </div>
         </div>
       </footer>

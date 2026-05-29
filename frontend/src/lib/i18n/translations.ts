@@ -2,14 +2,31 @@ export const translations = {
   sr: {
     // Nav
     nav_order: 'Naruči privezak', nav_login: 'Moj nalog', nav_how: 'Kako radi', nav_price: 'Cena',
+    nav_home: 'Početna', nav_shop: 'Prodavnica', nav_about: 'O nama', nav_contact: 'Kontakt',
+    nav_order_now: 'Naruči odmah →', nav_login_label: 'Prijava',
     // Landing
     hero_title: 'Vaš ljubimac uvek pronađen.', hero_sub: 'Jedan sken QR priveska — nalazač odmah vidi ime vašeg ljubimca, vaš broj telefona i medicinske podatke. Bez aplikacije, bez registracije.',
     hero_cta: 'Naruči privezak', hero_cta2: 'Kako funkcioniše ↓',
     trust_steel: 'Nerđajući čelik', trust_noapp: 'Bez aplikacije', trust_delivery: 'Post Express dostava', trust_cod: 'Plaćanje pouzećem',
-    how_title: 'Tri koraka do spokoja.', how_s1_t: 'Naručite privezak', how_s1: 'Odaberete količinu i pošaljete narudžbinu. Privezak stiže za 1–2 dana na vašu adresu.',
+    how_title: 'Tri koraka do spokoja.', how_s1_t: 'Naručite privezak', how_s1: 'Odaberete količinu i pošaljete narudžbinu. Privezak stiže za 1–3 dana na vašu adresu.',
     how_s2_t: 'Skenirajte i popunite profil', how_s2: 'Prvim skeniranjem otvara se forma. Unosite podatke o ljubimcu za samo 2 minuta.',
     how_s3_t: 'Nalazač skenira — vi dobijate poziv', how_s3: 'Bilo ko skenira privezak i odmah vidi vaše kontakt podatke. Nema naloga, nema aplikacije.',
+    // Promise section
+    promise_scan: 'Skeniraj me.', promise_home: 'Znam gde je moj dom.', promise_tagline: 'Jednostavno. Brzo. Sigurno.',
+    promise_safe_t: 'Siguran sam', promise_safe_d: 'Vlasnik odmah dobija vaš kontakt i tačnu lokaciju gde sam nađen.',
+    promise_loved_t: 'Voljen sam', promise_loved_d: 'Moj QR privezak vodi me kući — bez aplikacije, bez komplikacija.',
+    promise_belong_t: 'Pripadam', promise_belong_d: 'Svaki ljubimac zaslužuje da bude pronađen i bezbedan vraćen svom domu.',
+    // Spec section
     spec_title: 'Izrađen da traje.', spec_material: 'Materijal', spec_size: 'Prečnik', spec_coating: 'Zaštita', spec_option: 'Opcija',
+    spec_tag: 'privezak', spec_steel_val: 'Nerđajući čelik', spec_epoxy_val: 'Epoxy premaz',
+    spec_desc: 'Nerđajući čelik sa epoksi zaštitom. QR kod ostaje savršeno čitljiv godinama — kiša, blato, igra u parku — ništa ga ne može oštetiti.',
+    // Products / coming soon
+    products_title: 'Naši proizvodi', products_label: 'prodavnica',
+    products_sub: 'Kvalitetni privesci i dodaci za vaše ljubimce.',
+    coming_soon: 'Uskoro u prodaji', coming_soon_sub: 'Pripremamo ponudu QR privezaka. Pratite nas — lansiranje uskoro!', coming_soon_badge: 'Dolazi uskoro',
+    // CTA banner
+    cta_title: 'Mali privezak.', cta_title2: 'Ogromno olakšanje.',
+    cta_sub: 'Naručite danas — vaš ljubimac je zaštićen doživotno.',
     price_title: 'Jedna cena, doživotni profil.',
     faq_title: 'Česta pitanja',
     faq_q1: 'Da li nalazač mora da ima aplikaciju?', faq_a1: 'Ne. Svaki telefon sa kamerom može da skenira QR kod — otvara se obična web stranica, bez preuzimanja ičega.',
@@ -65,14 +82,33 @@ export const translations = {
     not_found: 'Stranica nije pronađena', not_found_back: 'Nazad na početnu',
   },
   en: {
+    // Nav
     nav_order: 'Order tag', nav_login: 'My account', nav_how: 'How it works', nav_price: 'Pricing',
+    nav_home: 'Home', nav_shop: 'Shop', nav_about: 'About us', nav_contact: 'Contact',
+    nav_order_now: 'Order now →', nav_login_label: 'Login',
+    // Landing
     hero_title: 'Your pet always found.', hero_sub: 'One QR scan — the finder instantly sees your pet\'s name, your phone number and medical info. No app needed.',
     hero_cta: 'Order tag', hero_cta2: 'How it works ↓',
     trust_steel: 'Stainless steel', trust_noapp: 'No app needed', trust_delivery: 'Fast delivery', trust_cod: 'Cash on delivery',
-    how_title: 'Three steps to peace of mind.', how_s1_t: 'Order your tag', how_s1: 'Choose quantity. The tag arrives in 1–2 days.',
+    how_title: 'Three steps to peace of mind.', how_s1_t: 'Order your tag', how_s1: 'Choose quantity and place your order. The tag arrives in 1–3 days.',
     how_s2_t: 'Scan & fill in profile', how_s2: 'First scan opens a form. Fill in your pet\'s info in 2 minutes.',
     how_s3_t: 'Finder scans, you get a call', how_s3: 'Anyone who finds your pet scans the tag and sees your contact instantly.',
+    // Promise section
+    promise_scan: 'Scan me.', promise_home: 'I know where my home is.', promise_tagline: 'Simple. Fast. Secure.',
+    promise_safe_t: 'I am safe', promise_safe_d: 'The owner instantly gets your contact and exact location where I was found.',
+    promise_loved_t: 'I am loved', promise_loved_d: 'My QR tag leads me home — no app, no hassle.',
+    promise_belong_t: 'I belong', promise_belong_d: 'Every pet deserves to be found and safely returned home.',
+    // Spec section
     spec_title: 'Built to last.', spec_material: 'Material', spec_size: 'Diameter', spec_coating: 'Coating', spec_option: 'Option',
+    spec_tag: 'tag', spec_steel_val: 'Stainless steel', spec_epoxy_val: 'Epoxy coating',
+    spec_desc: 'Stainless steel with epoxy coating. The QR code stays perfectly readable for years — rain, mud, park play — nothing can damage it.',
+    // Products / coming soon
+    products_title: 'Our products', products_label: 'shop',
+    products_sub: 'Quality tags and accessories for your pets.',
+    coming_soon: 'Coming soon', coming_soon_sub: "We're preparing our QR tag collection. Stay tuned — launching soon!", coming_soon_badge: 'Coming soon',
+    // CTA banner
+    cta_title: 'Small tag.', cta_title2: 'Huge peace of mind.',
+    cta_sub: 'Order today — your pet is protected for life.',
     price_title: 'One price, lifetime profile.',
     faq_title: 'FAQ',
     faq_q1: 'Does the finder need an app?', faq_a1: 'No. Any phone with a camera can scan a QR code directly — it opens a regular web page.',
