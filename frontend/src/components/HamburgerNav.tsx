@@ -18,6 +18,7 @@ export default function HamburgerNav() {
     { href: '/',           label: t('nav_home') },
     { href: '/prodavnica', label: t('nav_shop') },
     { href: '/o-nama',     label: t('nav_about') },
+    { href: '/kontakt',    label: t('nav_contact') },
     { href: '/naruci',     label: t('nav_order') },
     { href: '/login',      label: t('nav_login_label') },
   ]

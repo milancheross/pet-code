@@ -1,20 +1,27 @@
+'use client'
 import Link from 'next/link'
 import PetCodeLogo from '@/components/PetCodeLogo'
 import HamburgerNav from '@/components/HamburgerNav'
-import type { Metadata } from 'next'
-
-export const metadata: Metadata = {
-  title: 'O nama — PetCode.rs',
-  description: 'Upoznajte tim iza PetCode — srpskog startapa za QR identifikaciju ljubimaca.',
-}
+import LangSwitcher from '@/components/LangSwitcher'
+import { useLang } from '@/lib/i18n/LangContext'
 
 export default function ONamaPage() {
+  const { t } = useLang()
+
+  const values = [
+    { icon: '🛡️', titleKey: 'val_security_t', descKey: 'val_security_d', color: 'teal' },
+    { icon: '⭐', titleKey: 'val_quality_t',   descKey: 'val_quality_d',   color: 'orange' },
+    { icon: '🐾', titleKey: 'val_pets_t',      descKey: 'val_pets_d',      color: 'teal' },
+    { icon: '🇷🇸', titleKey: 'val_local_t',   descKey: 'val_local_d',     color: 'navy' },
+  ] as const
+
   return (
     <div className="min-h-screen bg-[#F4F7FA]">
       <nav className="bg-white border-b border-[#E2EAF0] px-5 py-3.5 flex items-center justify-between sticky top-0 z-50">
         <Link href="/"><PetCodeLogo size="sm" /></Link>
-        <div className="flex items-center gap-3">
-          <Link href="/naruci" className="hidden sm:block btn-primary text-sm px-5 py-2.5">Naruči</Link>
+        <div className="flex items-center gap-2">
+          <LangSwitcher />
+          <Link href="/naruci" className="hidden sm:block btn-primary text-sm px-5 py-2.5">{t('nav_order')}</Link>
           <HamburgerNav />
         </div>
       </nav>
@@ -23,50 +30,37 @@ export default function ONamaPage() {
 
         {/* Hero */}
         <div className="text-center mb-16">
-          <div className="section-label mb-3">// o nama</div>
-          <h1 className="text-4xl font-extrabold text-navy tracking-tight mb-4">Ko smo mi</h1>
-          <p className="text-gray-500 font-medium max-w-xl mx-auto leading-relaxed">
-            PetCode je srpski projekat koji pomaže vlasnicima ljubimaca da nikad više ne brinu šta će se desiti ako im ljubimac odluta.
-          </p>
+          <div className="section-label mb-3">// {t('about_label')}</div>
+          <h1 className="text-4xl font-extrabold text-navy tracking-tight mb-4">{t('about_title')}</h1>
+          <p className="text-gray-500 font-medium max-w-xl mx-auto leading-relaxed">{t('about_sub')}</p>
         </div>
 
         {/* Naša priča */}
         <div className="bg-white rounded-3xl border border-[#E2EAF0] p-8 shadow-[0_4px_24px_rgba(11,31,59,0.06)] mb-8">
-          <div className="section-label mb-3">// naša priča</div>
-          <h2 className="text-2xl font-extrabold text-navy mb-4">Kako je PetCode nastao</h2>
+          <div className="section-label mb-3">// {t('about_story_label')}</div>
+          <h2 className="text-2xl font-extrabold text-navy mb-4">{t('about_story_title')}</h2>
           <div className="text-gray-500 font-medium leading-relaxed space-y-4">
-            <p>
-              Sve je počelo jednostavnom idejom — šta ako svaki ljubimac ima digitalni profil dostupan svakome ko ga nađe? Bez aplikacije, bez registracije, samo jedan sken.
-            </p>
-            <p>
-              PetCode je nastao u Arilju 2026. godine, iz ljubavi prema životinjama i vere da moderna tehnologija može da pomogne da se svaki izgubljeni ljubimac vrati kući.
-            </p>
-            <p>
-              Danas pomažemo vlasnicima širom Srbije da se osećaju spokojno — jer znaju da, bez obzira gde završi njihov ljubimac, pronalazač ima sve informacije koje su mu potrebne da ga vrati kući.
-            </p>
+            <p>{t('about_story_p1')}</p>
+            <p>{t('about_story_p2')}</p>
+            <p>{t('about_story_p3')}</p>
           </div>
         </div>
 
-        {/* Naše vrednosti */}
+        {/* Vrednosti */}
         <div className="mb-8">
           <div className="text-center mb-8">
-            <div className="section-label mb-3">// vrednosti</div>
-            <h2 className="text-2xl font-extrabold text-navy">Naše vrednosti</h2>
+            <div className="section-label mb-3">// {t('about_values_label')}</div>
+            <h2 className="text-2xl font-extrabold text-navy">{t('about_values_title')}</h2>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
-            {[
-              { icon: '🛡️', title: 'Sigurnost', desc: 'Svaki privezak je od nerđajućeg čelika sa epoksi zaštitom — QR kod ostaje čitljiv godinama, po kiši i blatu.', color: 'teal' },
-              { icon: '⭐', title: 'Kvalitet', desc: 'Ne pravimo kompromise. Svaki privezak je proveren pre isporuke i nosi doživotnu garanciju.', color: 'orange' },
-              { icon: '🐾', title: 'Ljubimci na prvom mestu', desc: 'Svaka odluka počinje istim pitanjem — da li ovo zaista pomaže ljubimcima i njihovim vlasnicima?', color: 'teal' },
-              { icon: '🇷🇸', title: 'Domaći proizvod', desc: 'Ponosni smo što smo srpski. Sve projektujemo, pakujemo i šaljemo iz Arilja, Srbija.', color: 'navy' },
-            ].map(v => (
-              <div key={v.title} className="bg-white rounded-3xl border border-[#E2EAF0] p-6 shadow-[0_4px_24px_rgba(11,31,59,0.06)] flex gap-4">
+            {values.map(v => (
+              <div key={v.titleKey} className="bg-white rounded-3xl border border-[#E2EAF0] p-6 shadow-[0_4px_24px_rgba(11,31,59,0.06)] flex gap-4">
                 <div className={`w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 text-xl ${
                   v.color === 'teal' ? 'bg-teal/10' : v.color === 'orange' ? 'bg-orange/10' : 'bg-navy/5'
                 }`}>{v.icon}</div>
                 <div>
-                  <h3 className="font-bold text-navy mb-1">{v.title}</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed font-medium">{v.desc}</p>
+                  <h3 className="font-bold text-navy mb-1">{t(v.titleKey)}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed font-medium">{t(v.descKey)}</p>
                 </div>
               </div>
             ))}
@@ -75,12 +69,12 @@ export default function ONamaPage() {
 
         {/* Kontakt info */}
         <div className="bg-navy rounded-3xl p-8 shadow-[0_8px_32px_rgba(11,31,59,0.18)]">
-          <div className="text-white/40 text-xs font-bold uppercase tracking-widest mb-5">Kontaktirajte nas</div>
+          <div className="text-white/40 text-xs font-bold uppercase tracking-widest mb-5">{t('about_contact_us')}</div>
           <div className="grid sm:grid-cols-3 gap-4">
             {[
               { label: 'Email', value: 'petcodeoffice@gmail.com', href: 'mailto:petcodeoffice@gmail.com' },
-              { label: 'Adresa', value: 'Stevana Čolovića 53, Arilje', href: null },
-              { label: 'Radno vreme', value: 'Pon–Pet 09–17h', href: null },
+              { label: t('about_address'), value: 'Stevana Čolovića 53, Arilje', href: null },
+              { label: t('about_hours'), value: t('about_hours_val'), href: null },
             ].map(c => (
               <div key={c.label}>
                 <div className="text-white/30 text-xs font-semibold uppercase tracking-widest mb-1">{c.label}</div>
@@ -99,9 +93,9 @@ export default function ONamaPage() {
           <PetCodeLogo size="sm" showTagline />
           <div className="text-xs text-gray-400 font-medium">© 2026 PetCode · Srbija · petcodeoffice@gmail.com</div>
           <div className="flex items-center gap-5">
-            <Link href="/" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">Početna</Link>
-            <Link href="/prodavnica" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">Prodavnica</Link>
-            <Link href="/naruci" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">Naruči</Link>
+            <Link href="/" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">{t('nav_home')}</Link>
+            <Link href="/prodavnica" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">{t('nav_shop')}</Link>
+            <Link href="/naruci" className="text-xs text-gray-400 font-semibold hover:text-teal transition-colors">{t('nav_order')}</Link>
           </div>
         </div>
       </footer>
