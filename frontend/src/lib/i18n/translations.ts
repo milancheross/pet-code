@@ -5,7 +5,7 @@ export const translations = {
     nav_home: 'Početna', nav_shop: 'Prodavnica', nav_about: 'O nama', nav_contact: 'Kontakt',
     nav_order_now: 'Naruči odmah →', nav_login_label: 'Prijava',
     // Landing
-    hero_title: 'Vaš ljubimac uvek pronađen.', hero_sub: 'Jedan sken QR priveska — nalazač odmah vidi ime vašeg ljubimca, vaš broj telefona i medicinske podatke. Bez aplikacije, bez registracije.',
+    hero_title: 'Vaš ljubimac uvek pronađen.', hero_title1: 'Vaš ljubimac uvek', hero_title2: 'pronađen.', hero_sub: 'Jedan sken QR priveska — nalazač odmah vidi ime vašeg ljubimca, vaš broj telefona i medicinske podatke. Bez aplikacije, bez registracije.',
     hero_cta: 'Naruči privezak', hero_cta2: 'Kako funkcioniše ↓',
     trust_steel: 'Nerđajući čelik', trust_noapp: 'Bez aplikacije', trust_delivery: 'Post Express dostava', trust_cod: 'Plaćanje pouzećem',
     how_title: 'Tri koraka do spokoja.', how_s1_t: 'Naručite privezak', how_s1: 'Odaberete količinu i pošaljete narudžbinu. Privezak stiže za 1–3 dana na vašu adresu.',
@@ -87,7 +87,7 @@ export const translations = {
     nav_home: 'Home', nav_shop: 'Shop', nav_about: 'About us', nav_contact: 'Contact',
     nav_order_now: 'Order now →', nav_login_label: 'Login',
     // Landing
-    hero_title: 'Your pet always found.', hero_sub: 'One QR scan — the finder instantly sees your pet\'s name, your phone number and medical info. No app needed.',
+    hero_title: 'Your pet always found.', hero_title1: 'Your pet always', hero_title2: 'found.', hero_sub: 'One QR scan — the finder instantly sees your pet\'s name, your phone number and medical info. No app needed.',
     hero_cta: 'Order tag', hero_cta2: 'How it works ↓',
     trust_steel: 'Stainless steel', trust_noapp: 'No app needed', trust_delivery: 'Fast delivery', trust_cod: 'Cash on delivery',
     how_title: 'Three steps to peace of mind.', how_s1_t: 'Order your tag', how_s1: 'Choose quantity and place your order. The tag arrives in 1–3 days.',

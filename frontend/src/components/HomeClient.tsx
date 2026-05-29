@@ -170,8 +170,7 @@ export default function HomeClient() {
               className="font-extrabold text-navy leading-[1.08] tracking-tight mb-4"
               style={{ fontSize: 'clamp(28px, 8vw, 52px)' }}
             >
-              {t('hero_title').replace('pronađen.', '')}
-              <span className="text-teal">pronađen.</span>
+              {t('hero_title1')} <span className="text-teal">{t('hero_title2')}</span>
             </h1>
             <p className="text-base md:text-lg text-gray-500 leading-relaxed mb-7 font-medium max-w-md mx-auto md:mx-0">
               {t('hero_sub')}
